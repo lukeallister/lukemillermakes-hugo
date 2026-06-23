@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Devops on Luke Miller Makes</title><link>https://lukemillermakes.com/tags/devops/</link><description>Recent content in Devops on Luke Miller Makes</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 21 Apr 2022 02:29:19 +0000</lastBuildDate><atom:link href="https://lukemillermakes.com/tags/devops/index.xml" rel="self" type="application/rss+xml"/><item><title>VPN remote desktop with tailscale and x11vnc</title><link>https://lukemillermakes.com/post/2022/04/21/vpn-remote-desktop-with-tailscale-and-x11vnc/</link><pubDate>Thu, 21 Apr 2022 02:29:19 +0000</pubDate><guid>https://lukemillermakes.com/post/2022/04/21/vpn-remote-desktop-with-tailscale-and-x11vnc/</guid><description>&lt;p>I have 2 linux machines: local and remote. local is the laptop I carry around to different networks&amp;ndash;into the office, coffeeshops, library. But I want to be able to log into remote when I need it.&lt;/p>
-&lt;p>It&amp;rsquo;s pretty simple to do this with tailscale + x11vnc.&lt;/p>
-&lt;h2 id="ssh-keys">SSH keys&lt;/h2>
-&lt;p>On local: `ssh-copy-id remote` and enter the password to save the key.&lt;/p>
-&lt;h2 id="tailscale">Tailscale&lt;/h2>
-&lt;p>On both machines, install and connect tailscale&lt;/p>
-&lt;p>&lt;a href="https://tailscale.com/">https://tailscale.com/&lt;/a>&lt;/p>
-&lt;p>(other options would be nebula, zerotier, and others. This post had good comparisons: &lt;a href="https://blog.unixfy.net/battle-of-the-mesh-vpns/">https://blog.unixfy.net/battle-of-the-mesh-vpns/&lt;/a>)&lt;/p></description></item></channel></rss>

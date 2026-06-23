@@ -1,6 +1,7 @@
 # Hugo build output -- rebuilt inside the container, never committed.
 public/
 public_v2/
+public_v3/
 
 # Hugo caches.
 resources/_gen/
