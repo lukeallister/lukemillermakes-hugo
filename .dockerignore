@@ -1,5 +1,7 @@
-# Hugo build output -- rebuilt inside the container, never copied in.
-public/
+# Hugo build output -- included so the image ships a pre-built site when
+# available. The Dockerfile's builder stage only rebuilds with --build-arg
+# REBUILD=1, which is what CI uses. Local/migration builds ship public/ as-is.
+# public/
 
 # Theme files that aren't needed at build time.
 themes/xmin/.git

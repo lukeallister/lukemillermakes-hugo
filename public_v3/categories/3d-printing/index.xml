@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>3d-Printing on Luke Miller Makes</title><link>https://lukemillermakes.com/categories/3d-printing/</link><description>Recent content in 3d-Printing on Luke Miller Makes</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 15 Aug 2024 22:48:06 +0000</lastBuildDate><atom:link href="https://lukemillermakes.com/categories/3d-printing/index.xml" rel="self" type="application/rss+xml"/><item><title>I didn't need all those keys anyway</title><link>https://lukemillermakes.com/post/2024/08/15/i-didnt-need-all-those-keys-anyway/</link><pubDate>Thu, 15 Aug 2024 22:48:06 +0000</pubDate><guid>https://lukemillermakes.com/post/2024/08/15/i-didnt-need-all-those-keys-anyway/</guid><description>&lt;p>I&amp;rsquo;ve posted a few keyboard builds here over the years. Each one was me looking for some kind of efficiency, or just wanting to try something different.&lt;/p>
+&lt;p>This time, I wanted to solve 3 problems:&lt;/p>
+&lt;ul>
+&lt;li>I wanted to move my hands less&lt;/li>
+&lt;li>I wanted to really explore layers and combos&lt;/li>
+&lt;li>I didn&amp;rsquo;t want to buy more switches, since I had some left over from my last keyboard&lt;/li>
+&lt;/ul>
+&lt;p>Behold, my 30-key descent into madness&lt;/p></description></item><item><title>Build a split planck keyboard</title><link>https://lukemillermakes.com/post/2021/10/10/build-a-split-planck-keyboard/</link><pubDate>Sun, 10 Oct 2021 18:02:25 +0000</pubDate><guid>https://lukemillermakes.com/post/2021/10/10/build-a-split-planck-keyboard/</guid><description>&lt;p>&lt;img src="images/th_IMG_20211003_165002.jpg" alt="">&lt;/p>
+&lt;p>This is my favorite keyboard. It&amp;rsquo;s comfortable, fast, and efficient. Make one!&lt;/p>
+&lt;h2 id="materials">Materials&lt;/h2>
+&lt;ul>
+&lt;li>1 Arduino pro micro&lt;/li>
+&lt;li>1 nice micro usb cord&lt;/li>
+&lt;li>48 switches (your choice)&lt;/li>
+&lt;li>48 diodes (1N4148 or similar)&lt;/li>
+&lt;li>48 keycaps (I like DSA profile)&lt;/li>
+&lt;li>2 ft of old ethernet cable&lt;/li>
+&lt;li>Some wire (18 AWG to 28 AWG is fine; copper is better)&lt;/li>
+&lt;li>Paracord or cable wrap (some way to keep wires from RH to LH neat and nice)&lt;/li>
+&lt;li>3 zip ties&lt;/li>
+&lt;li>Printed parts: 1 LH, 1 RH, test plate &lt;a href="https://lukemillermakes.com/wp-content/uploads/2021/10/split-planck-fillet.zip">CAD files&lt;/a>, &lt;a href="https://lukemillermakes.com/wp-content/uploads/2021/10/kb-case.scad">source&lt;/a>&lt;/li>
+&lt;li>Firmware: &lt;a href="https://lukemillermakes.com/wp-content/uploads/2021/10/split-planck-firmware.zip">split-planck-firmware&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="procedure">Procedure&lt;/h2>
+&lt;h3 id="test-switch-fit">Test switch fit&lt;/h3>
+&lt;p>Print test plate and check switch fit.&lt;/p></description></item><item><title>A stand (for your phone)</title><link>https://lukemillermakes.com/post/2020/03/23/a-stand-for-your-phone/</link><pubDate>Mon, 23 Mar 2020 01:10:00 +0000</pubDate><guid>https://lukemillermakes.com/post/2020/03/23/a-stand-for-your-phone/</guid><description>&lt;p>I previously built a &lt;a href="https://lukemillermakes.com/2019/07/roubos-phone-stand/">Roubo phone stand&lt;/a> that gets used all the time. But phonestands are so useful that I have more.&lt;/p>
+&lt;p>A lot more.&lt;/p>
+&lt;p>&lt;img src="images/r_IMG_20200322_205246935.jpg" alt="">&lt;/p>
+&lt;p>I designed this one in &lt;a href="https://www.openscad.org/">OpenSCAD&lt;/a>, a free text-based CAD program, and it is fully parametric. You can adjust the size and the angles to ridiculous degrees. But this is the one that I like and use. I think I have 4 of these around the house and I&amp;rsquo;m still tempted to print another.&lt;/p></description></item><item><title>Battery powered speaker</title><link>https://lukemillermakes.com/post/2019/01/31/battery-powered-speaker/</link><pubDate>Thu, 31 Jan 2019 23:29:24 +0000</pubDate><guid>https://lukemillermakes.com/post/2019/01/31/battery-powered-speaker/</guid><description>&lt;p>We&amp;rsquo;ve all seen (and heard) the battery bluetooth speakers. I wanted to make one that was still portable, but a bit more serious. Here&amp;rsquo;s my drill-battery powered speaker.&lt;/p>
+&lt;p>&lt;img src="images/r_IMG_20190131_140137755_HDR.jpg" alt="">&lt;/p>
+&lt;p>It all started with the drill battery. It&amp;rsquo;s just sitting there, high-powered and easy to recharge.&lt;/p>
+&lt;p>I found a &lt;a href="https://www.thingiverse.com/thing:2417350">thingiverse file&lt;/a> that fit my ryobi battery. I printed it out and added a battery clip.&lt;/p>
+&lt;p>Then I gathered parts - a &lt;a href="https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&amp;amp;toolid=11800&amp;amp;pub=5575388422&amp;amp;campid=5338300398&amp;amp;mpre=https%3A%2F%2Fwww.ebay.com%2Fsch%2Fi.html%3F_from%3DR40%26_trksid%3Dp2380057.m570.l1312.R1.TR11.TRC2.A0.H0.Xtpa.TRS1%26_nkw%3DTPA3116%26_sacat%3D0%26LH_BIN%3D1%26_sop%3D15%26LH_PrefLoc%3D3">TPA3116 chip amp&lt;/a> *(affiliate link) - 3&amp;quot; full range drivers from &lt;a href="https://www.parts-express.com/dayton-audio-pc83-4-3-full-range-poly-cone-driver--295-154">parts express&lt;/a> - miscellaneous bits - panel jack - power jack - 3 way power switch (you don&amp;rsquo;t want the battery and the wall power ever connected together) - a brass wall plate - wire - pan head screws - 3d printed bits - battery clip - bass reflex ports - &lt;a href="https://www.thingiverse.com/thing:3378713">volume knob&lt;/a>&lt;/p></description></item><item><title>A 3D printed gaming keyboard</title><link>https://lukemillermakes.com/post/2018/12/02/a-3d-printed-gaming-keyboard/</link><pubDate>Sun, 02 Dec 2018 19:15:01 +0000</pubDate><guid>https://lukemillermakes.com/post/2018/12/02/a-3d-printed-gaming-keyboard/</guid><description>&lt;p>I built a one handed keyboard last year and it got me hooked.&lt;/p>
+&lt;p>This week I finished my third keyboard build:&lt;/p>
+&lt;p>&lt;img src="images/r_IMG_20181129_223758206_HDR.jpg" alt="">&lt;/p>
+&lt;p>I&amp;rsquo;ve been using may handmade split planck for a while now, and I love it. It is fast and efficient and a joy to use. However, it is not awesome for games. The lack of number keys makes certain things very difficult.&lt;/p>
+&lt;p>So I modified my CAD and added another row.&lt;/p></description></item><item><title>Fixing my improvements</title><link>https://lukemillermakes.com/post/2018/07/27/fixing-my-improvements/</link><pubDate>Fri, 27 Jul 2018 00:16:01 +0000</pubDate><guid>https://lukemillermakes.com/post/2018/07/27/fixing-my-improvements/</guid><description>&lt;p>In my last post I talked about upgrading my 3d printer to use a better hotend with interchangeable nozzles. Since then I have broken and fixed my printer again.&lt;/p>
+&lt;p>First the break.&lt;/p>
+&lt;p>The new hotend has one of those pipe fitting clamp things that grabs on to the bowden tube (the tube the filament runs in from the extruder to the hotend). So far, this is the same as the original. But the new hotend has an additional trick: it never lets go of the tube.&lt;/p></description></item><item><title>Faster 3D printing</title><link>https://lukemillermakes.com/post/2018/07/24/faster-3d-printing/</link><pubDate>Tue, 24 Jul 2018 14:26:46 +0000</pubDate><guid>https://lukemillermakes.com/post/2018/07/24/faster-3d-printing/</guid><description>&lt;p>Let&amp;rsquo;s get this out of the way: 3D printers are awesome. I have had mine for about a year and a half and it has let me build fun and crazy things like my &lt;a href="https://lukemillermakes.com/2018/04/diy-mechanical-keyboard/">homemade keyboard&lt;/a>.&lt;/p>
+&lt;p>But 3d printers are obnoxiously slow. It makes sense; it&amp;rsquo;s the world&amp;rsquo;s tiniest glue gun putting down layer after layer of molten plastic in order to slowly build up the missing part to fix a priceless gadget. Or a pokemon model. Whatever. It takes a while.&lt;/p></description></item></channel></rss>

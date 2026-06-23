@@ -1,0 +1,66 @@
+/* ============================================================
+   Paletton palette for Luke Miller Makes
+   ============================================================
+
+   Source: https://paletton.com/#uid=5310u0k-WrRn6-VtYz5EdmDKzhg
+   Base color: #009B50
+   Adjacent-color 3-scheme (Paletton "3 colors adjacent")
+
+   Note on hue: the Paletton UI displays "Hue: 193°" for this scheme,
+   but the named base color #009B50 actually sits at HSL hue 151° (a
+   true green) under the standard HSL/HSB color model. The 193° value
+   in Paletton's hash appears to be a scheme-rotation parameter rather
+   than the base hue; we anchor the palette to #009B50 itself so the
+   500-level variables match the intended teal-green rather than the
+   cyan-teal that 193° would produce.
+
+   3 hues:
+     - PRIMARY  (hue 151°)   — the green base
+     - ANALOG-1 (hue 121°)   — 30° shift toward yellow-green
+     - ANALOG-2 (hue 181°)   — 30° shift toward cyan-teal
+
+   Each hue has 10 brightness levels (50 → 900) following Tailwind's
+   naming convention. Saturation decreases toward the lightest and
+   darkest extremes to keep contrast readable.
+
+   This file only defines the palette tokens; semantic mappings live
+   in custom.css.
+   ============================================================ */
+
+:root {
+  /* Primary (hue 151° — the green base, anchored to #009B50) */
+  --palette-primary-50:  #E9FCF3;
+  --palette-primary-100: #C8F9E1;
+  --palette-primary-200: #97F7C8;
+  --palette-primary-300: #55F6A8;
+  --palette-primary-400: #06F983;
+  --palette-primary-500: #009B50;  /* base */
+  --palette-primary-600: #066B3A;
+  --palette-primary-700: #0A4327;
+  --palette-primary-800: #0A291A;
+  --palette-primary-900: #081610;
+
+  /* Analog-1 (hue 121°, -30° from base, yellow-green) */
+  --palette-analog1-50:  #E9FCE9;
+  --palette-analog1-100: #C8F9C9;
+  --palette-analog1-200: #97F799;
+  --palette-analog1-300: #55F658;
+  --palette-analog1-400: #06F90A;
+  --palette-analog1-500: #009B02;
+  --palette-analog1-600: #066B07;
+  --palette-analog1-700: #0A430A;
+  --palette-analog1-800: #0A290B;
+  --palette-analog1-900: #081609;
+
+  /* Analog-2 (hue 181°, +30° from base, cyan-teal) */
+  --palette-analog2-50:  #E9FCFC;
+  --palette-analog2-100: #C8F8F9;
+  --palette-analog2-200: #97F5F7;
+  --palette-analog2-300: #55F3F6;
+  --palette-analog2-400: #06F5F9;
+  --palette-analog2-500: #00989B;
+  --palette-analog2-600: #06696B;
+  --palette-analog2-700: #0A4243;
+  --palette-analog2-800: #0A2829;
+  --palette-analog2-900: #081616;
+}

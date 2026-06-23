@@ -1,0 +1,368 @@
+/* ============================================================
+   Custom theme overrides for Luke Miller Makes
+   ------------------------------------------------------------
+   Loads AFTER bootstrap.min.css and the xmin theme CSS so its
+   declarations win the cascade.
+   ============================================================ */
+
+/* ---------- Semantic palette mappings ---------- */
+:root {
+  --color-bg:         #F7F9F7;                          /* off-white with a hint of green */
+  --color-surface:    #FFFFFF;                          /* card / nav background */
+  --color-text:       #1A2A22;                          /* dark green-black, high contrast on bg */
+  --color-text-muted: #5A6B62;                          /* muted body text */
+  --color-link:       var(--palette-primary-600);       /* #066B3A */
+  --color-link-hover: var(--palette-primary-500);       /* #009B50 */
+  --color-border:     #D5DDD8;                          /* light divider */
+  --color-accent:     var(--palette-analog2-500);       /* #00989B — cyan-teal for highlights */
+  --color-nav-bg:     var(--palette-primary-700);       /* dark green nav bar */
+  --color-nav-text:   #FFFFFF;
+}
+
+/* ---------- Bootstrap variable overrides ---------- */
+:root {
+  --bs-primary:   var(--palette-primary-500);
+  --bs-secondary: var(--palette-analog2-500);
+  --bs-success:   var(--palette-primary-600);
+  --bs-info:      var(--palette-analog2-400);
+  --bs-warning:   var(--palette-analog1-500);
+  --bs-danger:    #B0392E;
+  --bs-light:     #F7F9F7;
+  --bs-dark:      var(--palette-primary-800);
+  --bs-body-bg:   var(--color-bg);
+  --bs-body-color: var(--color-text);
+  --bs-link-color: var(--color-link);
+  --bs-link-hover-color: var(--color-link-hover);
+}
+
+/* ---------- Base typography & layout ---------- */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--palette-primary-700);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.1rem; border-bottom: 2px solid var(--color-border); padding-bottom: 0.3em; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.3rem; }
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+/* ---------- Navigation bar (override xmin's plain <ul>) ---------- */
+nav, nav ul.menu, .menu {
+  background-color: var(--color-nav-bg) !important;
+  border: none !important;
+  padding: 0.75rem 1rem !important;
+  margin: 0 -1.25rem 1.5rem -1.25rem !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+/* Site title: large white text on the nav background */
+.site-title {
+  color: var(--color-nav-text);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  margin: 0 0 0.25rem 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+.site-title a {
+  color: inherit !important;
+  text-decoration: none;
+}
+.site-title a:hover {
+  color: inherit !important;
+  text-decoration: none;
+}
+
+/* Menu sits on its own line below the site title */
+nav ul.menu, .menu {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+}
+
+nav ul.menu li, .menu li {
+  display: inline-block;
+  margin: 0;
+}
+/* Top-level buttons: transparent until rollover */
+nav ul.menu li a, .menu li a {
+  color: var(--color-nav-text) !important;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.4rem 0.95rem;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  display: inline-block;
+}
+/* On hover, invert: white background, dark green text */
+nav ul.menu li a:hover, .menu li a:hover,
+nav ul.menu li a:focus, .menu li a:focus {
+  background-color: var(--color-nav-text);
+  color: var(--color-nav-bg) !important;
+  border-color: var(--color-nav-text);
+  text-decoration: none;
+}
+
+/* ---------- xmin layout overrides (article-meta, footer) ---------- */
+.article-meta {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.article-meta h1 {
+  border-bottom: none;
+  margin: 0 0 0.25rem 0;
+}
+.article-meta h2.date, .article-meta h2.author {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+main {
+  margin-top: 1rem;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+footer a {
+  color: var(--palette-primary-600);
+}
+
+/* ---------- Home page: vertical stacked post list ---------- */
+.home-intro {
+  margin: 0 0 1.5rem 0;
+  padding: 0 0 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+}
+.home-intro p { margin: 0; }
+
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.post-list-item {
+  margin: 0 0 2rem 0;
+  padding: 0 0 2rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.post-list-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.post-list-item article {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+.post-list-thumb-link {
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--palette-primary-50);
+}
+.post-list-thumb {
+  display: block;
+  width: 100%;
+  height: 165px;
+  object-fit: cover;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  max-width: none;
+  max-height: none;
+  cursor: pointer;
+}
+.post-list-thumb-link:hover .post-list-thumb {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
+.post-list-body { min-width: 0; }
+.post-list-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+.post-list-title a {
+  color: var(--palette-primary-700);
+}
+.post-list-title a:hover {
+  color: var(--palette-primary-500);
+  text-decoration: none;
+}
+.post-list-date {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.6rem 0;
+}
+.post-list-snippet {
+  font-size: 0.97rem;
+  color: var(--color-text);
+  line-height: 1.55;
+  margin: 0;
+}
+.home-more {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+.home-more a {
+  color: var(--palette-primary-600);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .post-list-item article {
+    grid-template-columns: 1fr;
+  }
+  .post-list-thumb {
+    height: 200px;
+  }
+}
+
+/* ---------- Single post & page styling ---------- */
+main p, main ul, main ol {
+  margin-bottom: 1em;
+}
+/* Images inside posts: block-level + auto margins to center them.
+   Anchor wrappers around images also become block so the image's
+   margin: auto can actually center it within the parent <p>. */
+main img {
+  display: block;
+  max-width: 80%;
+  max-height: 80vh;
+  object-fit: contain;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.75em auto;
+  cursor: zoom-in;
+}
+main p > a:has(img),
+main li > a:has(img) {
+  display: block;
+}
+main code {
+  background-color: var(--palette-primary-50);
+  color: var(--palette-primary-800);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+main pre {
+  background-color: var(--palette-primary-800);
+  color: #E8F1ED;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+main pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+main blockquote {
+  border-left: 4px solid var(--palette-primary-400);
+  padding-left: 1rem;
+  margin-left: 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+main table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+main th, main td {
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+main th {
+  background-color: var(--palette-primary-50);
+}
+
+/* ---------- Image modal popup ---------- */
+#image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: zoom-out;
+  justify-content: center;
+  align-items: center;
+}
+#image-modal.active {
+  display: flex;
+}
+#image-modal img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Tag/category pill styling ---------- */
+.tags, .categories {
+  margin-top: 1rem;
+}
+.tag-pill {
+  display: inline-block;
+  background-color: var(--palette-primary-100);
+  color: var(--palette-primary-800);
+  padding: 0.2em 0.65em;
+  border-radius: 12px;
+  font-size: 0.85em;
+  margin: 0 0.25em 0.25em 0;
+  text-decoration: none;
+}
+.tag-pill:hover {
+  background-color: var(--palette-primary-200);
+  text-decoration: none;
+}

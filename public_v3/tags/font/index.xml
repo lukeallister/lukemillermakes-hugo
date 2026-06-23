@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Font on Luke Miller Makes</title><link>https://lukemillermakes.com/tags/font/</link><description>Recent content in Font on Luke Miller Makes</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 08 Dec 2021 21:17:43 +0000</lastBuildDate><atom:link href="https://lukemillermakes.com/tags/font/index.xml" rel="self" type="application/rss+xml"/><item><title>Globally replace a font in linux</title><link>https://lukemillermakes.com/post/2021/12/08/globally-replace-a-font-in-linux/</link><pubDate>Wed, 08 Dec 2021 21:17:43 +0000</pubDate><guid>https://lukemillermakes.com/post/2021/12/08/globally-replace-a-font-in-linux/</guid><description>&lt;p>There are many good fonts, but a few are terrible.&lt;/p>
+&lt;p>In linux, we can force a replacement of a particularly hated font: Comic Sans&lt;/p>
+&lt;h2 id="terminal">Terminal&lt;/h2>
+&lt;p>&lt;code>sudo vim /etc/fonts/local.conf&lt;/code>&lt;/p>
+&lt;p>In this file, this will do it:&lt;/p>
+&lt;p>``` Comic Sans MS Ubuntu ```&lt;/p>
+&lt;h2 id="what-is-happening">What is happening?&lt;/h2>
+&lt;p>As always, the &lt;a href="https://wiki.archlinux.org/title/Font_configuration#Replace_or_set_default_fonts">Arch linux wiki has good documentation&lt;/a>. What we are doing is matching font family name of &amp;ldquo;Comic Sans MS&amp;rdquo; with another: &amp;ldquo;Ubuntu.&amp;rdquo; You could change the replacement font, but this one blends well in many debian based system.&lt;/p></description></item></channel></rss>

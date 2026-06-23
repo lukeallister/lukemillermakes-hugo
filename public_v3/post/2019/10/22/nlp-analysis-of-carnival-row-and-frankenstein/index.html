@@ -1,0 +1,314 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>NLP analysis of 'Carnival Row' and 'Frankenstein' | Luke Miller Makes</title><link rel=stylesheet href=/css/bootstrap.min.css><link rel=stylesheet href=/css/palette.css><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link rel=stylesheet href=/css/custom.css></head><body><nav><div class=site-title>Luke Miller Makes</div><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/portfolio/>Portfolio</a></li><li><a href=/categories/>Categories</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>NLP analysis of &lsquo;Carnival Row&rsquo; and &lsquo;Frankenstein&rsquo;</span></h1><h2 class=date>2019/10/22</h2></div><main><h2 id=context>Context</h2><p>I am enrolled in a Natural Language Processing course this quarter. I&rsquo;m enjoying it a lot and decided to share some of the coursework here.</p><p>This represents an analytic comparison between the screenplay of &lsquo;Carnival Row&rsquo; and the novel <em>Frankenstein</em>.</p><p>If you&rsquo;re interested in literature, language, or python, I hope you find this informative.</p><hr><h2 id=choosing-the-texts>Choosing the texts</h2><p>I recently watched the show ‘Carnival Row’ on Amazon. This murder mystery is set in a vibrant fantasy city in the midst of industrialization. It features urban fantasy and science fiction tropes. I enjoyed the show and wondered what other stories might be similar. Specifically, I wondered how this would compare be to Mary Shelley’s <em>Frankenstein</em>. This is worth considering because <em>Frankenstein</em> is considered one of the first science fiction novels in English. Most fantasy and science fiction works owe at least some debt to this iconic work.</p><p>Some obvious differences between the two texts arise from format and style. “A Killing on Carnival Row” is a screenplay while <em>Frankenstein</em> is a full novel. That means that the play will have more stage direction, while the novel will contain more narrator commentary. Also, <em>Frankenstein</em> was written in 1818 while the “Carnival Row” screenplay was written in 2005. We’ll see later how these factors change the comparison.</p><p>The text of “A Killing on Carnival Row” is available online as a PDF scan. This added significant challenge to the project. I downloaded the PDF of the screenplay and then needed to do an OCR text scan. In Linux this can be done with command-line tools: ocrmypdf &ndash;sidecar carnival-row.txt A-Killing-On-Carnival-Row.pdf out-carnival-row.pdf. The OCR scanner actually did a great job, but this is one place where the accuracy of the comparison could be compromised.</p><p>For both <em>Frankenstein</em> and “Carnival Row” I preprocessed the text by removing introduction and afterwords text. This gives us just the stories to compare.</p><h2 id=define-functions-and-stopwords>Define functions and stopwords</h2><p>In order to make the coding clear to read and straightforward to reuse, let us wrap several steps in functions.</p><p>First import libraries.</p><pre tabindex=0><code>import nltk
+import re
+from nltk.collocations import *
+from nltk.book import FreqDist
+</code></pre><p>Then create a stopword list</p><pre tabindex=0><code>stopwords = nltk.corpus.stopwords.words(&#39;english&#39;)
+stopwords += [&#39;chapter&#39;,&#39;cont&#39;,&#39;ext.&#39;,&#39;int.&#39;,&#39;v.&#39;]
+</code></pre><p>We need to ignore ‘chapter’ in order to remove the <em>Frankenstein</em> chapter titles. Likewise ‘cont’ and ‘ext’ are used within the “Carnival Row” stage directions, so these (and other stage directions) are better ignored.</p><p>We will need an alphanumeric filter, so we’ll reuse the version presented in the session.</p><pre tabindex=0><code>def alpha_filter(w):
+  # pattern to match word of non-alphabetical characters
+  pattern = re.compile(&#39;^[^a-z]+$&#39;)
+  if (pattern.match(w)):
+    return True
+  else:
+    return False
+</code></pre><p>Let’s use a modified version of the default tokenizer since we are dealing with traditional text (not tweets or social media).</p><pre tabindex=0><code>pattern = r&#39;&#39;&#39; (?x)                # set flag to allow verbose regexps
+        (?:[A-Z.]{2,})+        # abbreviations, e.g. U.S.A. tweaked to include capital abbreviations, eg &#39;UN&#39;
+        | \$?\d+(?:\.\d+)?%?   # currency and percentages, $12.40, 50%
+        | \b(?:_)             # Frankenstein text has underscores beginning letter titles. This sets those to their own character
+        | \w+(?:-\w+)*         # words with internal hyphens
+        | \.\.\.               # ellipsis
+        | [][.,;&#34;&#39;?():-_%#&#39;]   # separate tokens
+        &#39;&#39;&#39;
+</code></pre><p>It is convenient to wrap some of our steps within functions. This allows us to apply them to any number of texts for comparison and ensures that we actually do the same steps for each corpus.</p><h2 id=clean-text>Clean text</h2><p>First let’s build a clean text function. We will use this in word frequencies, though we won’t do this for bigram, since it would split phrases.</p><pre tabindex=0><code>def cleanText(string):
+    # tokenize using pattern regex
+    tokens = nltk.regexp_tokenize(string,pattern)
+    # make everything lower
+    words = [w.lower() for w in tokens]
+    #filter stopwords 
+    words = [w for w in words if w not in stopwords]
+    #filter alpha
+    words = [w for w in words if not alpha_filter(w)]
+    return(words)
+</code></pre><p>Next let’s import the data.</p><pre tabindex=0><code>with open(&#39;carnival-row.txt&#39;, &#39;r&#39;) as file:
+    carnivalRow = file.read()
+
+with open(&#39;frankenstein.txt&#39;, &#39;r&#39;) as file:
+    frankenstein = file.read()
+</code></pre><p>We are comparing a novel to a play. Let’s see how many tokens each has:</p><pre tabindex=0><code>print(len(nltk.regexp_tokenize(carnivalRow,pattern)))
+</code></pre><pre tabindex=0><code>## 32743
+</code></pre><pre tabindex=0><code>print(len(nltk.regexp_tokenize(frankenstein,pattern)))
+</code></pre><pre tabindex=0><code>## 84444
+</code></pre><pre tabindex=0><code>print(84444/32743)
+</code></pre><pre tabindex=0><code>## 2.5789939834468436
+</code></pre><p>So Frankenstein is about 2.5 times longer. This is a bit of a challenge when comparing texts, but we can still consider common words and phrases.</p><p>Let’s see if the cleanText() function works as expected.</p><pre tabindex=0><code>print(cleanText(carnivalRow)[:70])
+</code></pre><pre tabindex=0><code>## [&#39;killing&#39;, &#39;carnival&#39;, &#39;row&#39;, &#39;written&#39;, &#39;travis&#39;, &#39;beacham&#39;, &#39;sewer&#39;, &#39;tunnel&#39;, &#39;night&#39;, &#39;archway&#39;, &#39;end&#39;, &#39;alley&#39;, &#39;broken&#39;, &#39;bent&#39;, &#39;long&#39;, &#39;ago&#39;, &#39;crusted&#39;, &#39;moss&#39;, &#39;trickle&#39;, &#39;water&#39;, &#39;cuts&#39;, &#39;scream&#39;, &#39;within&#39;, &#39;laboured&#39;, &#39;breathing&#39;, &#39;rapid&#39;, &#39;splish&#39;, &#39;splash&#39;, &#39;footfalls&#39;, &#39;aisling&#39;, &#39;cobweb&#39;, &#39;beautiful&#39;, &#39;intense&#39;, &#39;bursts&#39;, &#39;tunnel&#39;, &#39;narrow&#39;, &#39;alley&#39;, &#39;body&#39;, &#39;petite&#39;, &#39;young&#39;, &#39;frail&#39;, &#39;tense&#39;, &#39;fear&#39;, &#39;back&#39;, &#39;sprout&#39;, &#39;pair&#39;, &#39;large&#39;, &#39;moth-like&#39;, &#39;wings&#39;, &#39;fragile&#39;, &#39;intricate&#39;, &#39;frayed&#39;, &#39;edges&#39;, &#39;aisling&#39;, &#39;cobweb&#39;, &#39;faerie&#39;, &#39;running&#39;, &#39;life&#39;, &#39;catches&#39;, &#39;tattered&#39;, &#39;skirt&#39;, &#39;metal&#39;, &#39;grating&#39;, &#39;stumbles&#39;, &#39;face&#39;, &#39;first&#39;, &#39;turns&#39;, &#39;panicked&#39;, &#39;darkness&#39;, &#39;distant&#39;]
+</code></pre><pre tabindex=0><code>print(cleanText(frankenstein)[:70])
+</code></pre><pre tabindex=0><code>## [&#39;frankenstein&#39;, &#39;modern&#39;, &#39;prometheus&#39;, &#39;mary&#39;, &#39;wollstonecraft&#39;, &#39;godwin&#39;, &#39;shelley&#39;, &#39;contents&#39;, &#39;letter&#39;, &#39;letter&#39;, &#39;letter&#39;, &#39;letter&#39;, &#39;letter&#39;, &#39;mrs&#39;, &#39;saville&#39;, &#39;england&#39;, &#39;st&#39;, &#39;petersburgh&#39;, &#39;dec&#39;, &#39;th&#39;, &#39;rejoice&#39;, &#39;hear&#39;, &#39;disaster&#39;, &#39;accompanied&#39;, &#39;commencement&#39;, &#39;enterprise&#39;, &#39;regarded&#39;, &#39;evil&#39;, &#39;forebodings&#39;, &#39;arrived&#39;, &#39;yesterday&#39;, &#39;first&#39;, &#39;task&#39;, &#39;assure&#39;, &#39;dear&#39;, &#39;sister&#39;, &#39;welfare&#39;, &#39;increasing&#39;, &#39;confidence&#39;, &#39;success&#39;, &#39;undertaking&#39;, &#39;already&#39;, &#39;far&#39;, &#39;north&#39;, &#39;london&#39;, &#39;walk&#39;, &#39;streets&#39;, &#39;petersburgh&#39;, &#39;feel&#39;, &#39;cold&#39;, &#39;northern&#39;, &#39;breeze&#39;, &#39;play&#39;, &#39;upon&#39;, &#39;cheeks&#39;, &#39;braces&#39;, &#39;nerves&#39;, &#39;fills&#39;, &#39;delight&#39;, &#39;understand&#39;, &#39;feeling&#39;, &#39;breeze&#39;, &#39;travelled&#39;, &#39;regions&#39;, &#39;towards&#39;, &#39;advancing&#39;, &#39;gives&#39;, &#39;foretaste&#39;, &#39;icy&#39;, &#39;climes&#39;]
+</code></pre><p>This is working as hoped. It converts the raw text into tokens using the custom tokenizer, and then makes them lowercase, removes stopwords, and drops non-alpha characters.</p><p>Let’s save the cleanText list for later use.</p><pre tabindex=0><code> # clean text
+carnival_clean = cleanText(carnivalRow)
+franken_clean = cleanText(frankenstein)
+</code></pre><h2 id=generate-word-frequency>Generate Word Frequency</h2><p>We’ll create a function to give us word frequency for each text.</p><pre tabindex=0><code>def wordFreq(wordlist,wordcount):
+    dist = FreqDist(wordlist)
+    freq = dict()
+    for word, frequency in dist.most_common(wordcount):
+      freq[word] = frequency
+    return(freq)
+</code></pre><p>Now we’ll run frequency distribution for both texts using the cleanText() version of each.</p><pre tabindex=0><code>carnivalWords = wordFreq(carnival_clean,70)
+frankenWords = wordFreq(franken_clean,70)
+print(carnivalWords)
+</code></pre><pre tabindex=0><code>## {&#39;philostrate&#39;: 600, &#39;vignette&#39;: 282, &#39;bottom&#39;: 120, &#39;quill&#39;: 120, &#39;flute&#39;: 117, &#39;haruspex&#39;: 110, &#39;back&#39;: 100, &#39;faerie&#39;: 100, &#39;mayor&#39;: 98, &#39;alcandre&#39;: 87, &#39;one&#39;: 72, &#39;eyes&#39;: 69, &#39;tourmaline&#39;: 67, &#39;looks&#39;: 63, &#39;know&#39;: 63, &#39;turns&#39;: 57, &#39;wings&#39;: 54, &#39;hand&#39;: 53, &#39;around&#39;: 52, &#39;blood&#39;: 49, &#39;like&#39;: 45, &#39;later&#39;: 41, &#39;kasmir&#39;: 41, &#39;get&#39;: 40, &#39;dark&#39;: 38, &#39;inspector&#39;: 38, &#39;stands&#39;: 38, &#39;door&#39;: 38, &#39;dame&#39;: 37, &#39;window&#39;: 36, &#39;pulls&#39;: 36, &#39;behind&#39;: 35, &#39;faeries&#39;: 35, &#39;face&#39;: 34, &#39;black&#39;: 34, &#39;long&#39;: 33, &#39;quarter&#39;: 33, &#39;body&#39;: 32, &#39;see&#39;: 32, &#39;police&#39;: 32, &#39;grabs&#39;: 31, &#39;city&#39;: 31, &#39;jack&#39;: 31, &#39;wall&#39;: 30, &#39;right&#39;: 30, &#39;head&#39;: 30, &#39;slowly&#39;: 30, &#39;open&#39;: 29, &#39;room&#39;: 29, &#39;street&#39;: 28, &#39;think&#39;: 28, &#39;night&#39;: 27, &#39;two&#39;: 27, &#39;still&#39;: 27, &#39;something&#39;: 27, &#39;go&#39;: 27, &#39;train&#39;: 26, &#39;away&#39;: 26, &#39;young&#39;: 25, &#39;human&#39;: 25, &#39;would&#39;: 25, &#39;end&#39;: 24, &#39;takes&#39;: 24, &#39;sits&#39;: 24, &#39;stops&#39;: 24, &#39;magistrate&#39;: 24, &#39;front&#39;: 23, &#39;unseelie&#39;: 23, &#39;going&#39;: 23, &#39;reaches&#39;: 23}
+</code></pre><pre tabindex=0><code>print(frankenWords)
+</code></pre><pre tabindex=0><code>## {&#39;one&#39;: 206, &#39;could&#39;: 197, &#39;would&#39;: 183, &#39;yet&#39;: 152, &#39;man&#39;: 136, &#39;father&#39;: 134, &#39;upon&#39;: 126, &#39;life&#39;: 115, &#39;every&#39;: 109, &#39;first&#39;: 108, &#39;might&#39;: 108, &#39;shall&#39;: 104, &#39;eyes&#39;: 104, &#39;said&#39;: 102, &#39;may&#39;: 99, &#39;time&#39;: 98, &#39;towards&#39;: 94, &#39;even&#39;: 94, &#39;saw&#39;: 94, &#39;elizabeth&#39;: 92, &#39;night&#39;: 88, &#39;found&#39;: 87, &#39;mind&#39;: 85, &#39;day&#39;: 82, &#39;ever&#39;: 80, &#39;felt&#39;: 79, &#39;death&#39;: 77, &#39;heart&#39;: 76, &#39;feelings&#39;: 76, &#39;thought&#39;: 74, &#39;dear&#39;: 72, &#39;soon&#39;: 71, &#39;friend&#39;: 71, &#39;made&#39;: 70, &#39;many&#39;: 68, &#39;still&#39;: 68, &#39;passed&#39;: 67, &#39;never&#39;: 66, &#39;also&#39;: 66, &#39;thus&#39;: 65, &#39;miserable&#39;: 65, &#39;must&#39;: 64, &#39;heard&#39;: 62, &#39;became&#39;: 61, &#39;like&#39;: 61, &#39;sometimes&#39;: 60, &#39;us&#39;: 60, &#39;love&#39;: 59, &#39;place&#39;: 59, &#39;clerval&#39;: 59, &#39;little&#39;: 58, &#39;human&#39;: 58, &#39;appeared&#39;: 57, &#39;indeed&#39;: 56, &#39;often&#39;: 55, &#39;justine&#39;: 55, &#39;misery&#39;: 54, &#39;words&#39;: 54, &#39;friends&#39;: 54, &#39;country&#39;: 53, &#39;nature&#39;: 53, &#39;although&#39;: 53, &#39;several&#39;: 51, &#39;among&#39;: 51, &#39;cottage&#39;: 51, &#39;feel&#39;: 50, &#39;whose&#39;: 50, &#39;great&#39;: 50, &#39;see&#39;: 50, &#39;old&#39;: 50}
+</code></pre><p>These are the most common words by frequency within the two texts. Let’s also consider the words that show up in both:</p><pre tabindex=0><code>intersects = []
+for i in carnivalWords.keys():
+  if i in frankenWords.keys():
+    intersects.append(i)
+print(intersects)
+</code></pre><pre tabindex=0><code>## [&#39;one&#39;, &#39;eyes&#39;, &#39;like&#39;, &#39;see&#39;, &#39;night&#39;, &#39;still&#39;, &#39;human&#39;, &#39;would&#39;]
+</code></pre><p>There are both similarities and differences in these word lists. Both have words that, while not exactly stopwords, aren’t very interesting. For example ‘back’, and ‘around’ are high scoring words in ‘Carnival Row’ that don’t tell us much. But there are a lot more filler words in <em>Frankenstein</em>: ‘could’, ‘would’, ‘upon’, and ‘among’. One thing that this tells us in comparing these texts is that the novel has more filler words. This makes sense and is what we’d expect.</p><p>Names of characters place highly in both texts. In ‘Carnival Row’ we see a bunch of names, like ‘philostrade’,‘vignette’, ‘tourmaline’, and ‘alcandre’. In Frankenstein we see names like ‘elizabeth’,‘clerval’, and ‘justine’. Names appear more often in ‘Carnival Row’ than in <em>Frankenstein</em>, mainly because they are used within the script to show who is doing what. Within <em>Frankenstein</em> names are usually used when characters are addressing each other.</p><p>An interesting selection of words are those that are dealing with age and <em>kind</em> or <em>station</em> of person. In ‘Carnival Row’ we see the kinds of people represented in this story: ‘faerie’,‘human’,‘young’,‘police’, and ‘mayor’. These are associated with characterization in the story. In <em>Frankenstein</em> we see ‘human’ in the top 70 words, though we <em>don’t</em> see ‘creature’–that occurs in the top 100. But we have more identifiers of age and station: ‘man’,‘father’,‘friend’, and ‘old’.</p><p>Both stories contain words connoting violence and horror. ‘Carnival Row’ includes various body parts like ‘eyes’,‘wings’,‘hand’,‘face’,‘body’, and ‘head’. Other words that give the sense of the setting are ‘blood’,‘dark’,‘door’,‘behind’,‘black’,‘slowly’, and ‘night’. Together, these common words would probably tell us that this was a murder mystery, even if we never read the text. <em>Frankenstein</em> is much more balanced in tone, though it still presents words that connote horror. We again have ‘eyes’, and ‘night’ but we also have ‘death’, ‘passed’, ‘misery’, miserable’, and ‘old’</p><p>Unlike ‘Carnival Row’, <em>Frankenstein</em> contains many emotion words. We see ‘felt’, ‘heart’, ‘feelings’, and ‘love’. Does that mean that ‘Carnival Row’ is unconcerned with these things? Definitely not. Rather, this is a structural difference. <em>Frankenstein</em> relies on the structure of nested letters and narratives. The perception of the narrator plays an important part of the story. On the flip side, “Carnival Row” is a screenplay and as such relies on setting and the actors to portray most of the emotion. That is, where <em>Frankenstein</em> will <em>tell</em> the reader that the creature is miserable, “Carnival Row” will rely on the actors’ portrayal of the emotions. So even though both stories contain similar emotions, they are more easily seen in the text of <em>Frankenstein</em>.</p><h2 id=generate-bigrams>Generate Bigrams</h2><p>Next let’s create bigram functions so we can likewise apply them to the texts.</p><pre tabindex=0><code>def freqBigrams(string):
+    # tokenize using pattern regex
+    tokens = nltk.regexp_tokenize(string,pattern)
+    # make everything lower
+    wordlist = [w.lower() for w in tokens]
+    #create measures object
+    bigram_measures = nltk.collocations.BigramAssocMeasures() 
+    #create finder
+    finder = BigramCollocationFinder.from_words(wordlist) 
+    # remove non-alphas
+    finder.apply_word_filter(alpha_filter)
+    # remove stopwords
+    finder.apply_word_filter(lambda w: w in stopwords)
+    # get bigrams by raw frequency
+    scored = finder.score_ngrams(bigram_measures.raw_freq)
+    return(scored)
+
+def PMIBigrams(string):
+    # tokenize using pattern regex
+    tokens = nltk.regexp_tokenize(string,pattern)
+    # make everything lower
+    wordlist = [w.lower() for w in tokens]
+    #create measures object
+    #create measures object
+    bigram_measures = nltk.collocations.BigramAssocMeasures() 
+    #create finder
+    finder = BigramCollocationFinder.from_words(wordlist) 
+    # remove non-alphas
+    finder.apply_word_filter(alpha_filter)
+    # remove stopwords
+    finder.apply_word_filter(lambda w: w in stopwords)
+    # remove low frequency
+    finder.apply_freq_filter(5)
+    # get bigrams PMI
+    scored = finder.score_ngrams(bigram_measures.pmi)
+    return(scored)
+</code></pre><p>The PMI uses a frequency filter of 5 to ensure that the words that show up are actually common to the texts.</p><p>Now that we have those we can apply them to the texts.</p><pre tabindex=0><code># generate frequency bigrams
+carnivalFreqBigrams = freqBigrams(carnivalRow)
+frankenFreqBigrams = freqBigrams(frankenstein)
+
+# generate PMI bigrams
+carnivalPMIBigrams = PMIBigrams(carnivalRow)
+frankenPMIBigrams = PMIBigrams(frankenstein)
+</code></pre><p>All that’s left is to compare them.</p><h2 id=bigram-analysis>Bigram analysis</h2><h3 id=frequency-bigrams>Frequency bigrams</h3><pre tabindex=0><code>for i in carnivalFreqBigrams[:50]:
+    print(i)
+</code></pre><pre tabindex=0><code>## ((&#39;unseelie&#39;, &#39;jack&#39;), 0.0006108175793299331)
+## ((&#39;moments&#39;, &#39;later&#39;), 0.0005802767003634364)
+## ((&#39;faerie&#39;, &#39;blood&#39;), 0.0005191949424304431)
+## ((&#39;faerie&#39;, &#39;quarter&#39;), 0.0004581131844974498)
+## ((&#39;later&#39;, &#39;philostrate&#39;), 0.0004581131844974498)
+## ((&#39;philostrate&#39;, &#39;looks&#39;), 0.0003664905475979599)
+## ((&#39;carnival&#39;, &#39;row&#39;), 0.00033594966863146323)
+## ((&#39;sergeant&#39;, &#39;bottom&#39;), 0.00033594966863146323)
+## ((&#39;young&#39;, &#39;girl&#39;), 0.00033594966863146323)
+## ((&#39;magistrate&#39;, &#39;flute&#39;), 0.00030540878966496657)
+## ((&#39;dark&#39;, &#39;figure&#39;), 0.0002748679106984699)
+## ((&#39;madame&#39;, &#39;mab&#39;), 0.0002748679106984699)
+## ((&#39;philostrate&#39;, &#39;stands&#39;), 0.00024432703173197324)
+## ((&#39;philostrate&#39;, &#39;turns&#39;), 0.00024432703173197324)
+## ((&#39;screaming&#39;, &#39;banshee&#39;), 0.00024432703173197324)
+## ((&#39;argyle&#39;, &#39;heights&#39;), 0.00021378615276547658)
+## ((&#39;looks&#39;, &#39;around&#39;), 0.00021378615276547658)
+## ((&#39;police&#39;, &#39;carriage&#39;), 0.00021378615276547658)
+## ((&#39;bloody&#39;, &#39;hell&#39;), 0.00018324527379897995)
+## ((&#39;continuous&#39;, &#39;philostrate&#39;), 0.00018324527379897995)
+## ((&#39;dame&#39;, &#39;whitley&#39;), 0.00018324527379897995)
+## ((&#39;guinevere&#39;, &#39;cartier&#39;), 0.00018324527379897995)
+## ((&#39;metropolitan&#39;, &#39;constabulary&#39;), 0.00018324527379897995)
+## ((&#39;natural&#39;, &#39;history&#39;), 0.00018324527379897995)
+## ((&#39;philostrate&#39;, &#39;grabs&#39;), 0.00018324527379897995)
+## ((&#39;philostrate&#39;, &#39;walks&#39;), 0.00018324527379897995)
+## ((&#39;vignette&#39;, &#39;looks&#39;), 0.00018324527379897995)
+## ((&#39;aisling&#39;, &#39;cobweb&#39;), 0.00015270439483248328)
+## ((&#39;banshee&#39;, &#39;printing&#39;), 0.00015270439483248328)
+## ((&#39;bleakness&#39;, &#39;keep&#39;), 0.00015270439483248328)
+## ((&#39;brass&#39;, &#39;horn&#39;), 0.00015270439483248328)
+## ((&#39;chambre&#39;, &#39;de&#39;), 0.00015270439483248328)
+## ((&#39;dalrymple&#39;, &#39;street&#39;), 0.00015270439483248328)
+## ((&#39;de&#39;, &#39;madame&#39;), 0.00015270439483248328)
+## ((&#39;faerie&#39;, &#39;mother&#39;), 0.00015270439483248328)
+## ((&#39;faerie&#39;, &#39;wings&#39;), 0.00015270439483248328)
+## ((&#39;hand&#39;, &#39;grabs&#39;), 0.00015270439483248328)
+## ((&#39;le&#39;, &#39;chambre&#39;), 0.00015270439483248328)
+## ((&#39;philostrate&#39;, &#39;pulls&#39;), 0.00015270439483248328)
+## ((&#39;philostrate&#39;, &#39;runs&#39;), 0.00015270439483248328)
+## ((&#39;philostrate&#39;, &#39;stops&#39;), 0.00015270439483248328)
+## ((&#39;philostrate&#39;, &#39;vignette&#39;), 0.00015270439483248328)
+## ((&#39;printing&#39;, &#39;office&#39;), 0.00015270439483248328)
+## ((&#39;royal&#39;, &#39;museum&#39;), 0.00015270439483248328)
+## ((&#39;underground&#39;, &#39;station&#39;), 0.00015270439483248328)
+## ((&#39;backs&#39;, &#39;away&#39;), 0.00012216351586598662)
+## ((&#39;begin&#39;, &#39;montage&#39;), 0.00012216351586598662)
+## ((&#39;eyes&#39;, &#39;meet&#39;), 0.00012216351586598662)
+## ((&#39;gatling&#39;, &#39;gun&#39;), 0.00012216351586598662)
+## ((&#39;inspector&#39;, &#39;philostrate&#39;), 0.00012216351586598662)
+</code></pre><pre tabindex=0><code>for i in frankenFreqBigrams[:50]:
+    print(i)
+</code></pre><pre tabindex=0><code>## ((&#39;old&#39;, &#39;man&#39;), 0.00040263369807209514)
+## ((&#39;native&#39;, &#39;country&#39;), 0.00017763251385533607)
+## ((&#39;natural&#39;, &#39;philosophy&#39;), 0.00016579034626498034)
+## ((&#39;taken&#39;, &#39;place&#39;), 0.0001539481786746246)
+## ((&#39;fellow&#39;, &#39;creatures&#39;), 0.00013026384349391313)
+## ((&#39;dear&#39;, &#39;victor&#39;), 0.00011842167590355739)
+## ((&#39;looked&#39;, &#39;upon&#39;), 0.00011842167590355739)
+## ((&#39;de&#39;, &#39;lacey&#39;), 0.00010657950831320165)
+## ((&#39;m.&#39;, &#39;waldman&#39;), 0.00010657950831320165)
+## ((&#39;nothing&#39;, &#39;could&#39;), 0.00010657950831320165)
+## ((&#39;one&#39;, &#39;another&#39;), 0.00010657950831320165)
+## ((&#39;young&#39;, &#39;man&#39;), 0.00010657950831320165)
+## ((&#39;every&#39;, &#39;day&#39;), 9.47373407228459e-05)
+## ((&#39;first&#39;, &#39;time&#39;), 9.47373407228459e-05)
+## ((&#39;long&#39;, &#39;time&#39;), 9.47373407228459e-05)
+## ((&#39;m.&#39;, &#39;krempe&#39;), 9.47373407228459e-05)
+## ((&#39;many&#39;, &#39;months&#39;), 9.47373407228459e-05)
+## ((&#39;mont&#39;, &#39;blanc&#39;), 9.47373407228459e-05)
+## ((&#39;one&#39;, &#39;day&#39;), 9.47373407228459e-05)
+## ((&#39;poor&#39;, &#39;girl&#39;), 9.47373407228459e-05)
+## ((&#39;several&#39;, &#39;hours&#39;), 9.47373407228459e-05)
+## ((&#39;human&#39;, &#39;beings&#39;), 8.289517313249017e-05)
+## ((&#39;many&#39;, &#39;hours&#39;), 8.289517313249017e-05)
+## ((&#39;passed&#39;, &#39;away&#39;), 8.289517313249017e-05)
+## ((&#39;short&#39;, &#39;time&#39;), 8.289517313249017e-05)
+## ((&#39;take&#39;, &#39;place&#39;), 8.289517313249017e-05)
+## ((&#39;two&#39;, &#39;months&#39;), 8.289517313249017e-05)
+## ((&#39;two&#39;, &#39;years&#39;), 8.289517313249017e-05)
+## ((&#39;cornelius&#39;, &#39;agrippa&#39;), 7.105300554213443e-05)
+## ((&#39;first&#39;, &#39;saw&#39;), 7.105300554213443e-05)
+## ((&#39;native&#39;, &#39;town&#39;), 7.105300554213443e-05)
+## ((&#39;nearly&#39;, &#39;two&#39;), 7.105300554213443e-05)
+## ((&#39;next&#39;, &#39;morning&#39;), 7.105300554213443e-05)
+## ((&#39;poor&#39;, &#39;william&#39;), 7.105300554213443e-05)
+## ((&#39;two&#39;, &#39;days&#39;), 7.105300554213443e-05)
+## ((&#39;cannot&#39;, &#39;describe&#39;), 5.9210837951778695e-05)
+## ((&#39;countenance&#39;, &#39;expressed&#39;), 5.9210837951778695e-05)
+## ((&#39;dear&#39;, &#39;sister&#39;), 5.9210837951778695e-05)
+## ((&#39;dearest&#39;, &#39;victor&#39;), 5.9210837951778695e-05)
+## ((&#39;died&#39;, &#39;away&#39;), 5.9210837951778695e-05)
+## ((&#39;ever&#39;, &#39;since&#39;), 5.9210837951778695e-05)
+## ((&#39;every&#39;, &#39;one&#39;), 5.9210837951778695e-05)
+## ((&#39;gentle&#39;, &#39;manners&#39;), 5.9210837951778695e-05)
+## ((&#39;great&#39;, &#39;god&#39;), 5.9210837951778695e-05)
+## ((&#39;many&#39;, &#39;years&#39;), 5.9210837951778695e-05)
+## ((&#39;never&#39;, &#39;saw&#39;), 5.9210837951778695e-05)
+## ((&#39;new&#39;, &#39;scene&#39;), 5.9210837951778695e-05)
+## ((&#39;one&#39;, &#39;time&#39;), 5.9210837951778695e-05)
+## ((&#39;pressed&#39;, &#39;upon&#39;), 5.9210837951778695e-05)
+## ((&#39;took&#39;, &#39;place&#39;), 5.9210837951778695e-05)
+</code></pre><p>For ‘Carnival Row’ this shows even more the extent of the stage directions within the script. We see ‘philostrade looks’, ‘philostrade stands’, ‘philostrade stands’, etc. all the way down. Many of these phrases are about the movement of the characters in the story.</p><p>We actually see the same thing in <em>Frankenstein</em>, but the movement is through time rather than from one scene in a set to another. We have ‘many months’, ‘every day’, ‘first time’, ‘several hours’, and many other time periods. These are here because of the structure of the narrative in Frankenstein: the story is nested within letters recounting the story in several layers. First we have Captain Walton’s letter, which includes Victor Frankenstein’s story, which includes the Creature’s story. Each of these people are telling their story in a past tense first person limited view. That means <em>Frankenstein</em> relies on a lot of time period description. We shouldn’t be surprised to see ‘next morning’ and ‘many years’ in the top 50 frequency bigrams.</p><p>‘Carnival Row’ contains a great many person and place names within the top 50 frequency bigrams. In addition to the main character ‘philostrade’ we see places like ‘faerie quarter’, ‘bleakness keep’, and ‘dalrymple street’.</p><p>One particularly interesting bigram is ‘natural history’ in ‘Carnival Row’, which corresponds closely to <em>Frankenstein</em>’s ‘natural philosophy’. The difference in terminology arises from the few hundred years between the writing of <em>Frankenstein</em> (1818) and ‘Carnival Row’ (2005). These terms both refer to science and the idea of scientific progress. Both stories present an uncertain look at this notion of progress, as it leads to violence and predation (‘Carnival Row’) or careless experimentation <em>(Frankenstein)</em>. In each case, unfettered science destroys people.</p><h3 id=bigrams-by-pmi>Bigrams by PMI</h3><pre tabindex=0><code>for i in carnivalPMIBigrams[:50]:
+    print(i)
+</code></pre><pre tabindex=0><code>## ((&#39;brass&#39;, &#39;horn&#39;), 12.413936390220119)
+## ((&#39;chambre&#39;, &#39;de&#39;), 12.413936390220119)
+## ((&#39;le&#39;, &#39;chambre&#39;), 12.413936390220119)
+## ((&#39;metropolitan&#39;, &#39;constabulary&#39;), 11.998898890941273)
+## ((&#39;argyle&#39;, &#39;heights&#39;), 11.828973889498961)
+## ((&#39;natural&#39;, &#39;history&#39;), 11.776506469604826)
+## ((&#39;madame&#39;, &#39;mab&#39;), 11.676970796053915)
+## ((&#39;banshee&#39;, &#39;printing&#39;), 11.565939483665169)
+## ((&#39;screaming&#39;, &#39;banshee&#39;), 11.507045794611603)
+## ((&#39;de&#39;, &#39;madame&#39;), 11.413936390220119)
+## ((&#39;royal&#39;, &#39;museum&#39;), 11.413936390220119)
+## ((&#39;aisling&#39;, &#39;cobweb&#39;), 11.03542476696639)
+## ((&#39;bleakness&#39;, &#39;keep&#39;), 10.928509563049879)
+## ((&#39;carnival&#39;, &#39;row&#39;), 10.785905167607078)
+## ((&#39;bloody&#39;, &#39;hell&#39;), 10.776506469604827)
+## ((&#39;printing&#39;, &#39;office&#39;), 10.565939483665169)
+## ((&#39;dalrymple&#39;, &#39;street&#39;), 10.191543968883671)
+## ((&#39;underground&#39;, &#39;station&#39;), 10.054040445133737)
+## ((&#39;guinevere&#39;, &#39;cartier&#39;), 10.02161896744136)
+## ((&#39;unseelie&#39;, &#39;jack&#39;), 9.84306871938475)
+## ((&#39;dame&#39;, &#39;whitley&#39;), 9.789445525312324)
+## ((&#39;young&#39;, &#39;girl&#39;), 9.566546806360263)
+## ((&#39;moments&#39;, &#39;later&#39;), 9.496956976988018)
+## ((&#39;police&#39;, &#39;carriage&#39;), 8.806253812998879)
+## ((&#39;dark&#39;, &#39;figure&#39;), 8.461464760302706)
+## ((&#39;faerie&#39;, &#39;mother&#39;), 7.355042701166552)
+## ((&#39;faerie&#39;, &#39;quarter&#39;), 7.217539177416615)
+## ((&#39;sergeant&#39;, &#39;bottom&#39;), 7.159122491191294)
+## ((&#39;magistrate&#39;, &#39;flute&#39;), 6.865499765524078)
+## ((&#39;faerie&#39;, &#39;blood&#39;), 6.827795698301681)
+## ((&#39;hand&#39;, &#39;grabs&#39;), 6.638710220878565)
+## ((&#39;looks&#39;, &#39;around&#39;), 6.1285341713578685)
+## ((&#39;faerie&#39;, &#39;wings&#39;), 4.922083293890443)
+## ((&#39;philostrate&#39;, &#39;walks&#39;), 4.895611082529252)
+## ((&#39;philostrate&#39;, &#39;runs&#39;), 4.632576676695459)
+## ((&#39;later&#39;, &#39;philostrate&#39;), 4.3194187914358295)
+## ((&#39;continuous&#39;, &#39;philostrate&#39;), 3.8956110825292516)
+## ((&#39;philostrate&#39;, &#39;stands&#39;), 3.5221526870018103)
+## ((&#39;philostrate&#39;, &#39;stops&#39;), 3.507045794611601)
+## ((&#39;vignette&#39;, &#39;looks&#39;), 3.4670301157637216)
+## ((&#39;philostrate&#39;, &#39;grabs&#39;), 3.400846390779673)
+## ((&#39;philostrate&#39;, &#39;looks&#39;), 3.377762777666632)
+## ((&#39;philostrate&#39;, &#39;turns&#39;), 2.937190186280654)
+## ((&#39;philostrate&#39;, &#39;pulls&#39;), 2.9220832938904433)
+## ((&#39;philostrate&#39;, &#39;vignette&#39;), -0.047543057066036454)
+</code></pre><pre tabindex=0><code>for i in frankenPMIBigrams[:50]:
+    print(i)
+</code></pre><pre tabindex=0><code>## ((&#39;cornelius&#39;, &#39;agrippa&#39;), 13.365707298398945)
+## ((&#39;de&#39;, &#39;lacey&#39;), 13.043779203511587)
+## ((&#39;mont&#39;, &#39;blanc&#39;), 12.780744797677793)
+## ((&#39;m.&#39;, &#39;waldman&#39;), 11.842145342341936)
+## ((&#39;natural&#39;, &#39;philosophy&#39;), 11.681209124126875)
+## ((&#39;m.&#39;, &#39;krempe&#39;), 11.672220340899624)
+## ((&#39;fellow&#39;, &#39;creatures&#39;), 10.432821494257485)
+## ((&#39;next&#39;, &#39;morning&#39;), 9.964827862116762)
+## ((&#39;native&#39;, &#39;country&#39;), 9.73732251738666)
+## ((&#39;dearest&#39;, &#39;victor&#39;), 9.71035546978639)
+## ((&#39;native&#39;, &#39;town&#39;), 9.442875158921407)
+## ((&#39;gentle&#39;, &#39;manners&#39;), 9.352245038592383)
+## ((&#39;young&#39;, &#39;woman&#39;), 9.32131317904049)
+## ((&#39;cannot&#39;, &#39;describe&#39;), 9.257182841620775)
+## ((&#39;taken&#39;, &#39;place&#39;), 9.139109847819745)
+## ((&#39;poor&#39;, &#39;girl&#39;), 9.06649928001167)
+## ((&#39;human&#39;, &#39;beings&#39;), 8.855649606691681)
+## ((&#39;nearly&#39;, &#39;two&#39;), 8.844761290548945)
+## ((&#39;take&#39;, &#39;place&#39;), 8.830987552457412)
+## ((&#39;poor&#39;, &#39;william&#39;), 8.814960513015704)
+## ((&#39;old&#39;, &#39;man&#39;), 8.72185110862422)
+## ((&#39;dear&#39;, &#39;victor&#39;), 8.71035546978639)
+## ((&#39;countenance&#39;, &#39;expressed&#39;), 8.701793456282966)
+## ((&#39;two&#39;, &#39;months&#39;), 8.639732488150717)
+## ((&#39;several&#39;, &#39;hours&#39;), 8.605819115177114)
+## ((&#39;great&#39;, &#39;god&#39;), 8.584347584874285)
+## ((&#39;short&#39;, &#39;time&#39;), 8.470889535091004)
+## ((&#39;two&#39;, &#39;years&#39;), 8.465703088375667)
+## ((&#39;died&#39;, &#39;away&#39;), 8.399923013736858)
+## ((&#39;pressed&#39;, &#39;upon&#39;), 8.388427374899027)
+## ((&#39;two&#39;, &#39;days&#39;), 8.14815343399888)
+## ((&#39;many&#39;, &#39;hours&#39;), 7.998136537955871)
+## ((&#39;many&#39;, &#39;months&#39;), 7.992842238286361)
+## ((&#39;new&#39;, &#39;scene&#39;), 7.94280155578676)
+## ((&#39;looked&#39;, &#39;upon&#39;), 7.852374474658818)
+## ((&#39;dear&#39;, &#39;sister&#39;), 7.762822889680525)
+## ((&#39;took&#39;, &#39;place&#39;), 7.635067342482152)
+## ((&#39;ever&#39;, &#39;since&#39;), 7.610819796235477)
+## ((&#39;young&#39;, &#39;man&#39;), 7.541278862982402)
+## ((&#39;passed&#39;, &#39;away&#39;), 7.463116840224055)
+## ((&#39;long&#39;, &#39;time&#39;), 7.227435498226727)
+## ((&#39;many&#39;, &#39;years&#39;), 7.1407409333986696)
+## ((&#39;nothing&#39;, &#39;could&#39;), 6.628178261522637)
+## ((&#39;one&#39;, &#39;another&#39;), 6.2945429209804065)
+## ((&#39;every&#39;, &#39;day&#39;), 6.239970969003936)
+## ((&#39;never&#39;, &#39;saw&#39;), 6.088652422250215)
+## ((&#39;first&#39;, &#39;time&#39;), 5.996109952120271)
+## ((&#39;first&#39;, &#39;saw&#39;), 5.641193445278997)
+## ((&#39;one&#39;, &#39;day&#39;), 5.321654766597646)
+## ((&#39;one&#39;, &#39;time&#39;), 4.386425021987879)
+</code></pre><p>The Mutual Information scores look very similar to the frequency bigrams, though there are some useful changes. One very helpful difference is the way that it moves the stage directions lower. In ‘Carnival Row’ the terms ‘philostrade stands’, ‘philostrade stops’, etc. are now lower because they occur so often. We now see phrases that show the tone of both texts are similar than the simple word frequency score would indicate.</p><p>‘Carnival Row’ still has phrases and terms that indicate violence and horror, (e.g. ‘screaming banshee’, ‘dark figure’, and ‘hand grabs’) but we can now see similar terms over in <em>Frankenstein</em>. For example, we now see ‘poor girl’ and ‘great god’–an expression of horror that closely parallels the ‘bloody hell’ that we see over in ‘Carnival Row’.</p><p>An important similarity that the PMI scores show is the relation of ‘young girl’ in ‘Carnival Row’ with the ‘young woman’ and ‘poor girl’ in the <em>Frankenstein</em> side. The explanation for this particular relationship relies on knowledge of the texts. In both stories these terms refer to the victims of the violence. One explanation for the similarity in tone, horror, and violence within these two stories is that an innocent always suffers for the sins of others.</p><h2 id=conclusions-about-the-texts>Conclusions about the texts</h2><p>These texts are very different in structure and presentation. Yet they present very similar themes, tones, and story. Though they were separated by almost 200 years, they employ similar words and themes to explore the danger of unbridled scientific progress. Though it’s impossible to say for certain that ‘Carnival Row’ was influenced by <em>Frankenstein</em>, the similarity within the texts indicates that this assumption is not far-fetched. At the very least they express similar concerns and genres of storytelling–despite the fact that the formatting and structure is totally different.</p><h2 id=challenges-and-technical-notes>Challenges and technical notes</h2><p>The challenges of comparing these texts are numerous. The most obvious challenge is the structural difference between a screenplay and a novel. The number of words in each is different. The stage direction and descriptive elements are different. Another issue is that of historical time and language usage. These were written almost 200 years apart so common phrases and syntactical style have greatly changed since then.</p><p>Technical challenges include the data collection. The ‘Carnival Row’ screenplay was available only as a pdf so I had to convert it to text. On the other end of the spectrum, <em>Frankenstein</em> is an easy text to obtain, since it’s available from Gutenberg.</p><p>Ultimately this was an interesting puzzle that begins to show the kind of literary analysis that can be assisted by NLP processing.</p></main><footer><div id=image-modal onclick='this.classList.remove("active")'><img id=image-modal-img src alt></div><script>document.addEventListener("DOMContentLoaded",function(){var e=document.getElementById("image-modal"),t=document.getElementById("image-modal-img");document.querySelectorAll("main img").forEach(function(n){if(n.classList.contains("post-list-thumb"))return;n.style.cursor="zoom-in",n.addEventListener("click",function(s){s.preventDefault(),t.src=n.src,t.alt=n.alt,e.classList.add("active")})}),document.addEventListener("keydown",function(t){t.key==="Escape"&&e.classList.remove("active")})})</script><hr>© Luke Miller 2026 | Built with <a href=https://gohugo.io/>Hugo</a> and the <a href=https://github.com/yihui/hugo-xmin>XMin theme</a> | Migrated from WordPress June 2026</footer></body></html>
