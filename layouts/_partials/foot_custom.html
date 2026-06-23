@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var modalImg = document.getElementById('image-modal-img');
 
   document.querySelectorAll('main img').forEach(function(img) {
+    if (img.classList.contains('post-list-thumb')) return;
     img.style.cursor = 'zoom-in';
     img.addEventListener('click', function(e) {
       e.preventDefault();
