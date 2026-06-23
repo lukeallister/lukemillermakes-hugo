@@ -1,0 +1,18 @@
+# Hugo build output -- rebuilt inside the container, never committed.
+public/
+public_v2/
+
+# Hugo caches.
+resources/_gen/
+.hugo_build.lock
+
+# Theme git internals (theme is vendored, not a submodule).
+themes/xmin/.git
+
+# Editor / OS cruft.
+*.swp
+*.swo
+.DS_Store
+
+# Header screenshots from visual QA.
+header-screenshot.png

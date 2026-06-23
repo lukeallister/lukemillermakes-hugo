@@ -1,0 +1,63 @@
+baseURL: "https://lukemillermakes.com/"
+languageCode: en-us
+title: "Luke Miller Makes"
+theme: "xmin"
+
+# Page sections: posts live in /post/, pages live in /page/.
+# XMin uses .Section for layout selection; we map WP's "post" to "post" and WP's
+# "page" to "page". (Hugo treats content/<dir>/index.md as belonging to that section.)
+pagination:
+  pagerSize: 20
+
+# Permalinks: preserve WP's /YYYY/MM/DD/slug/ structure
+permalinks:
+  post: "/post/:year/:month/:day/:slug/"
+  page: "/:slug/"
+  drafts: "/drafts/:year/:month/:day/:slug/"
+
+# Main nav mirrors the live WP site's "Primary Menu".
+# Portfolio is the merged landing page for both Woodworking and Knives projects
+# (see content/page/2018-03-20-portfolio/index.md) — both sections live there
+# as <h2> headings, so no separate top-level menu items are needed for them.
+menu:
+  main:
+    - name: Home
+      url: ""
+      weight: 1
+    - name: About
+      url: "/about/"
+      weight: 2
+    - name: Portfolio
+      url: "/portfolio/"
+      weight: 3
+    - name: Categories
+      url: "/categories/"
+      weight: 4
+
+params:
+  description: "A blog. By Luke Miller. Conversations about art, culture, DIY, and the occasional short story."
+  footer: "&copy; Luke Miller {Year} | Built with [Hugo](https://gohugo.io/) and the [XMin theme](https://github.com/yihui/hugo-xmin) | Migrated from WordPress June 2026"
+  showPoweredBy: false
+
+# Don't render drafts in production builds; use --buildDrafts locally.
+buildDrafts: false
+buildFuture: false
+
+# Enable GitHub-flavored markdown + raw HTML passthrough (for any embedded HTML the
+# WP→MD converter emitted)
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+          - - \[ 
+            - \]
+          - - $$
+            - $$
+          inline:
+          - - \(
+            - \)

@@ -1,0 +1,25 @@
+<style>
+/* Image modal popup */
+#image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  cursor: zoom-out;
+  justify-content: center;
+  align-items: center;
+}
+#image-modal.active {
+  display: flex;
+}
+#image-modal img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+</style>

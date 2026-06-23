@@ -1,0 +1,24 @@
+<!-- Image modal popup -->
+<div id="image-modal" onclick="this.classList.remove('active')">
+  <img id="image-modal-img" src="" alt="">
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var modal = document.getElementById('image-modal');
+  var modalImg = document.getElementById('image-modal-img');
+
+  document.querySelectorAll('main img').forEach(function(img) {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function(e) {
+      e.preventDefault();
+      modalImg.src = img.src;
+      modalImg.alt = img.alt;
+      modal.classList.add('active');
+    });
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') modal.classList.remove('active');
+  });
+});
+</script>

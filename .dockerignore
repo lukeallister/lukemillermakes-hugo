@@ -1,0 +1,27 @@
+# Hugo build output -- rebuilt inside the container, never copied in.
+public/
+
+# Theme files that aren't needed at build time.
+themes/xmin/.git
+themes/xmin/.github
+themes/xmin/images
+themes/xmin/exampleSite
+
+# VCS / editor cruft.
+.git
+.gitignore
+*.swp
+*.swo
+.DS_Store
+
+# Hugo caches that get rebuilt.
+resources/_gen/
+
+# All markdown except the project README.
+*.md
+!README.md
+
+# This file itself, plus the nginx config it references.
+# (Keep Dockerfile and nginx.conf so the COPY in Dockerfile works.)
+Dockerfile
+.dockerignore

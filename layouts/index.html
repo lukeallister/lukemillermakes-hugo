@@ -1,0 +1,57 @@
+{{ partial "header.html" . }}
+<main>
+  <div class="home-intro">
+    <p>A blog by Luke Miller. Conversations about art, culture, DIY, and the
+    occasional short story.</p>
+  </div>
+
+  <ul class="post-list">
+    {{ range first 20 (where .Site.RegularPages "Section" "post").ByDate.Reverse }}
+    <li class="post-list-item">
+      <article>
+        <a href="{{ .RelPermalink }}" class="post-list-thumb-link">
+          {{ $thumbSrc := "" }}
+          {{ with .Params.coverImage }}
+            {{ $ci := . }}
+            {{ $match := "" }}
+            {{ range $.Resources.ByType "image" }}
+              {{ $base := replace .Name "." "" }}
+              {{ if or (eq .Name $ci) (eq $base $ci) (eq .Name (printf "%s.jpg" $ci)) (eq .Name (printf "%s.png" $ci)) }}
+                {{ if not $match }}{{ $match = .RelPermalink }}{{ end }}
+              {{ end }}
+            {{ end }}
+            {{ if $match }}{{ $thumbSrc = $match }}{{ end }}
+          {{ end }}
+          {{ if not $thumbSrc }}
+            {{ range .Resources.ByType "image" }}
+              {{ if not $thumbSrc }}{{ $thumbSrc = .RelPermalink }}{{ end }}
+            {{ end }}
+          {{ end }}
+          {{ with $thumbSrc }}
+          <img class="post-list-thumb" src="{{ . }}" alt="{{ $.Title }}">
+          {{ end }}
+        </a>
+        <div class="post-list-body">
+          <h2 class="post-list-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+          <p class="post-list-date">{{ .Date.Format "January 2, 2006" }}</p>
+          <p class="post-list-snippet">
+            {{ $snippet := "" }}
+            {{ $content := .Plain | plainify | htmlUnescape }}
+            {{ $words := split $content " " }}
+            {{ if gt (len $words) 30 }}
+              {{ range first 30 $words }}{{ $snippet = printf "%s %s" $snippet . }}{{ end }}
+              {{ $snippet = trim $snippet " " }}…
+            {{ else }}
+              {{ $snippet = $content }}
+            {{ end }}
+            {{ $snippet }}
+          </p>
+        </div>
+      </article>
+    </li>
+    {{ end }}
+  </ul>
+
+  <p class="home-more"><a href="/post/">Browse the full archive →</a></p>
+</main>
+{{ partial "footer.html" . }}
