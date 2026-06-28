@@ -1,0 +1,53 @@
+# Containerfile for localhost/blog-scan:latest — the scan sidecar that pulls
+# PDFs from the Synology NAS, OCRs them, and writes Hugo page bundles.
+#
+# Base: debian:13-slim (trixie). Built on the VM via `podman build` because
+# the VM is where the image runs and the build is offline-friendly.
+#
+# Phase 9 §9.8 deployment pitfalls:
+#   - /etc/rsyncd.password is bind-mounted from the host at runtime, not baked
+#     into the image.
+#   - rsync_and_process.sh reads the password file via SSH_ASKPASS, so we ship
+#     /usr/local/bin/scan_askpass.sh in the image.
+
+FROM docker.io/library/debian:13-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    SUPERCRONIC_VERSION=v0.2.33 \
+    SUPERCRONIC_SHA1SUM=71b0d58cc53f6bd72cf2f293e09e294b79c666d8
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        ghostscript \
+        ocrmypdf \
+        openssh-client \
+        poppler-utils \
+        python3 \
+        python3-pip \
+        rsync \
+        tesseract-ocr \
+        tini \
+ && rm -rf /var/lib/apt/lists/* \
+ && curl -fsSL \
+        "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64" \
+        -o /usr/local/bin/supercronic \
+ && echo "${SUPERCRONIC_SHA1SUM}  /usr/local/bin/supercronic" | sha1sum -c - \
+ && chmod +x /usr/local/bin/supercronic
+
+# Pipeline scripts
+COPY scan_askpass.sh     /usr/local/bin/scan_askpass.sh
+COPY rsync_and_process.sh /usr/local/bin/rsync_and_process.sh
+COPY scan_to_post.py      /usr/local/bin/scan_to_post.py
+COPY crontab.txt          /etc/crontab.d/blog-scan
+
+RUN chmod 0755 /usr/local/bin/scan_askpass.sh \
+             /usr/local/bin/rsync_and_process.sh \
+             /usr/local/bin/scan_to_post.py \
+ && chmod 0644 /etc/crontab.d/blog-scan \
+ && mkdir -p /var/log /var/lib/scan \
+ && touch /var/log/scan.log
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/usr/local/bin/supercronic", "/etc/crontab.d/blog-scan"]

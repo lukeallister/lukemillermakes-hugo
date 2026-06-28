@@ -1,0 +1,35 @@
+[Unit]
+Description=Scan pipeline sidecar — Phase 9 rsync pull + OCR + draft creation
+
+[Container]
+Image=localhost/blog-scan:latest
+ContainerName=blog-scan
+Pod=blog.pod
+Volume=blog-content:/site
+# Absolute paths required — podman parses the source side of a Volume=
+# directive as a named-volume name, and rejects `~` and `..` segments.
+# Tilde expansion only works inside shell command lines, not in quadlet
+# syntax. See Phase 9 §9.8 deployment pitfalls.
+Volume=/home/hermes/.local/share/blog-scans/inbox:/inbox:z
+Volume=/home/hermes/.local/share/blog-scans/processed:/processed:z
+Volume=/home/hermes/.local/share/blog-scans/failed:/failed:z
+Volume=/home/hermes/.local/share/blog-scans/state:/var/lib/scan:z
+Volume=/home/hermes/.config/blog-scan/rsyncd.password:/etc/rsyncd.password:ro,z
+
+# rsync:// URL — Synology exposes the NAS shared folder as an rsync module
+# named "NAS", with the scan PDFs at /volume1/NAS/blog-scans/ on the server.
+# Trailing slash on the path makes rsync treat it as a directory so files
+# land directly in /inbox/.
+#
+# Auth: rsync daemon uses the password from /etc/rsyncd.password via
+#       --password-file (handled inside rsync_and_process.sh).
+#
+# SSH-style rsync (user@host:/path/) was attempted first but the Synology's
+# autobot account is sftp-only and refuses to spawn rsync over SSH.
+Environment=SCAN_NAS_URL=rsync://autobot@192.168.0.160/NAS/blog-scans/
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

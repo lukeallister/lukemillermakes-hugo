@@ -1,0 +1,20 @@
+# Containerfile for localhost/blog-hugo:latest — runs two hugo server
+# processes (prod :8080, stage :8081) sharing /site via the blog-content
+# named volume.
+#
+# Base: hugomods/hugo:exts (provides the `hugo` binary on PATH).
+# The repo source's /opt/data/lukemillermakes-hugo/scripts/ocr-pipeline/entrypoint.sh
+# is the source of truth for the two-process layout. Rebuild this image every
+# time entrypoint.sh changes; the deployed copy is what runs.
+
+FROM docker.io/hugomods/hugo:exts
+
+# bash is needed by the two-process entrypoint (uses $! / wait -n / trap).
+RUN apk add --no-cache bash
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 8080 8081
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

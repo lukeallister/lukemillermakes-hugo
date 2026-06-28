@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+# Watch-mode Hugo container for Phase 9 (scan-to-blog pipeline).
+#
+# Runs TWO hugo server processes in the same container:
+#   - PROD on :8080 (no --buildDrafts) — public-facing, via Caddy
+#   - STAGE on :8081 (--buildDrafts)  — LAN-only, shows drafts
+#
+# The shared content volume is mounted at /site (overrides Hugo's default /src).
+# Both processes watch /site/content and rebuild on changes (sub-second).
+
+FROM hugomods/hugo:exts
+
+# Base image is Alpine/busybox — no /bin/bash. Our entrypoint uses bash-only
+# features (set -o pipefail, wait -n), so install bash before the COPY.
+RUN apk add --no-cache bash
+
+COPY scripts/ocr-pipeline/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 8080 8081
+
+# Override the base image's ENTRYPOINT (which wraps our CMD in a passthrough
+# shell) so our entrypoint runs directly as PID 1 — simpler signal handling.
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

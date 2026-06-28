@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1
+# Scan-sidecar container for Phase 9 (scan-to-blog pipeline).
+#
+# Runs supercronic which every 30 minutes:
+#   1. rsync-pulls new PDFs from the Synology NAS into /inbox
+#   2. invokes scan_to_post.py on anything new
+#   3. writes generated page bundles to /site/content/post/...
+#
+# The blog-content pod volume is mounted at /site/content (shared with blog-hugo).
+# The inbox/processed/failed host directories are bind-mounted from
+# ~/.local/share/blog-scans/{inbox,processed,failed}.
+# rsync credentials come from a bind-mounted /etc/rsyncd.password.
+
+FROM debian:13-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Runtime dependencies. Slim image + no recommends to keep it small.
+# ghostscript is a hard dep of ocrmypdf; poppler-utils gives us pdftoppm.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    ocrmypdf \
+    poppler-utils \
+    ghostscript \
+    python3 \
+    python3-pip \
+    rsync \
+    ca-certificates \
+    curl \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# supercronic — single static binary, no libc deps beyond glibc.
+ARG SUPERCRONIC_VERSION=v0.2.33
+ARG SUPERCRONIC_SHA1SUM=71b0d58cc53f6bd72cf2f293e09e294b79c666d8
+RUN curl -fsSL \
+      "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64" \
+      -o /usr/local/bin/supercronic \
+    && echo "${SUPERCRONIC_SHA1SUM}  /usr/local/bin/supercronic" | sha1sum -c - \
+    && chmod +x /usr/local/bin/supercronic
+
+# Pipeline scripts and cron table.
+COPY scripts/ocr-pipeline/scan_to_post.py      /usr/local/bin/scan_to_post.py
+COPY scripts/ocr-pipeline/rsync_and_process.sh /usr/local/bin/rsync_and_process.sh
+COPY scripts/ocr-pipeline/crontab.txt           /etc/crontab
+
+RUN chmod +x /usr/local/bin/scan_to_post.py /usr/local/bin/rsync_and_process.sh \
+    && mkdir -p /var/lib/scan
+
+# tini reaps zombies (supercronic + rsync + python can leave them).
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["supercronic", "/etc/crontab"]

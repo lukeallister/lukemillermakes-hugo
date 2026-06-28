@@ -1,9 +1,9 @@
 # Phase 8: Deployment runbook
 
 **Target**: openSUSE MicroOS VM at `192.168.1.126`
-**Runtime user on VM**: `lukemillermakes`
+**Runtime user on VM**: `hermes` (per `podman-remote-admin` skill; confirmed live 2026-06-24, `Linger=yes`)
 **Container runtime**: rootless podman (MicroOS default)
-**Site image**: `localhost/lukemillermakes:latest` — multi-stage `klakegg/hugo:0.148.1-onbuild` → `nginx:1.27-alpine` (see `Dockerfile`, ~50 MB final image)
+**Site image**: `localhost/lukemillermakes:latest` — multi-stage `klakegg/hugo:0.148.1-onbuild` → `nginx:1.27-alpine` (see `Dockerfile`, ~50 MB final image). **This static-build model is superseded for the active deployment by Phase 9's `hugomods/hugo:exts` watch-mode serving** (see §8.10 below).
 **Service port**: `8080` (mapped to container's `80`)
 
 This runbook consolidates the deployment path. The full procedure, including the Dockerfile's design rationale and nginx config, lives in:
@@ -35,13 +35,13 @@ rsync -avz --delete \
   --exclude='public_v2' \
   -e ssh \
   /opt/data/lukemillermakes-hugo/ \
-  lukemillermakes@192.168.1.126:~/site/
+  hermes@192.168.1.126:~/site/
 ```
 
 Then on the VM:
 
 ```bash
-ssh lukemillermakes@192.168.1.126
+ssh hermes@192.168.1.126
 cd ~/site
 podman build -t lukemillermakes:latest .
 # expect: STEP ... nginx:1.27-alpine → DONE (≈50 MB image)
@@ -53,7 +53,7 @@ If you prefer to build the image locally and transfer it (faster rebuilds on a b
 ## 8.3 Run the container (manual, for first-boot smoke test)
 
 ```bash
-ssh lukemillermakes@192.168.1.126
+ssh hermes@192.168.1.126
 podman run -d --name lukemillermakes \
   -p 8080:80 \
   --restart=always \
@@ -82,7 +82,7 @@ MicroOS uses systemd, and podman integrates via **quadlet** — a unit file that
 Create the quadlet on the VM:
 
 ```bash
-ssh lukemillermakes@192.168.1.126
+ssh hermes@192.168.1.126
 
 mkdir -p ~/.config/containers/systemd
 
@@ -111,15 +111,15 @@ systemctl --user start lukemillermakes.service
 
 ### 8.4.1 Enable linger (critical)
 
-Without linger, the user service only runs while `lukemillermakes` is logged in. **Linger keeps user services alive across reboots even with no active session.**
+Without linger, the user service only runs while `hermes` is logged in. **Linger keeps user services alive across reboots even with no active session.**
 
 ```bash
 # Check whether linger is already on:
-loginctl show-user lukemillermakes | grep Linger
+loginctl show-user hermes | grep Linger
 # expect: Linger=yes
 
 # If not:
-sudo loginctl enable-linger lukemillermakes
+sudo loginctl enable-linger hermes
 ```
 
 Then enable the service to start at boot:
@@ -167,9 +167,9 @@ cd /opt/data/lukemillermakes-hugo
 rsync -avz --delete \
   --exclude='.git' --exclude='public' --exclude='resources' \
   -e ssh /opt/data/lukemillermakes-hugo/ \
-  lukemillermakes@192.168.1.126:~/site/
+  hermes@192.168.1.126:~/site/
 
-ssh lukemillermakes@192.168.1.126 '
+ssh hermes@192.168.1.126 '
   cd ~/site &&
   podman build -t lukemillermakes:latest . &&
   systemctl --user restart lukemillermakes.service
@@ -217,11 +217,11 @@ systemctl --user restart lukemillermakes.service
 ### Linger not enabled (service dies on logout/reboot)
 
 ```bash
-loginctl show-user lukemillermakes | grep Linger
+loginctl show-user hermes | grep Linger
 # if Linger=no:
-sudo loginctl enable-linger lukemillermakes
+sudo loginctl enable-linger hermes
 # verify:
-loginctl show-user lukemillermakes | grep Linger
+loginctl show-user hermes | grep Linger
 # expect: Linger=yes
 systemctl --user restart lukemillermakes.service
 ```
@@ -268,3 +268,15 @@ The container is reachable at `http://192.168.1.126:8080/` immediately. To make 
 | Container is misbehaving | `systemctl --user stop lukemillermakes.service` (site goes offline, DNS still resolves) |
 | Whole VM unreachable | DNS still points to old WP if you keep it running on a separate port; flip the A record back |
 | Need a known-good image | Re-tag the previous build: `podman tag <sha> localhost/lukemillermakes:latest` |
+
+## 8.10 Watch-mode serving (Phase 9 supersedes this for the active deployment)
+
+The static-build model described in §8.2–§8.6 is the v1 deployment and is fine for fully published content. **For draft-publication workflows (scan-to-blog pipeline, see `09-scan-to-blog-pipeline.md`), the deployment model changes:**
+
+- Hugo runs as a long-lived `hugo server` process (not a one-shot `hugo` build into nginx)
+- Two `hugo server` processes in the same container: PROD on `:8080` (no `--buildDrafts`) and STAGE on `:8081` (`--buildDrafts` enabled)
+- Both processes watch `/site/content/`; new draft posts appear on STAGE within a second, are hidden from PROD until the user flips `draft: true → draft: false`
+- No `podman build` cycle on each new post — content changes propagate via the shared pod volume and Hugo's file watcher
+- Phase 9 quadlets (`blog.pod`, `blog-hugo.container`, `blog-scan.container`, `blog-content.volume`) replace the `lukemillermakes.container` quadlet described in §8.4
+
+The v1 nginx static-build quadlet still exists at `~/.config/containers/systemd/lukemillermakes.container` (confirmed live). It can be removed once Phase 9 is the production deployment: `systemctl --user stop lukemillermakes.service && podman rm lukemillermakes`.

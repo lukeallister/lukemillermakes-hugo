@@ -1,0 +1,6 @@
+# supercronic crontab — runs every 30 minutes.
+#
+# Format: standard 5-field cron (no username, supercronic convention).
+# supercronic logs each run to stdout/stderr (which podman captures).
+
+*/30 * * * * /usr/local/bin/rsync_and_process.sh >> /var/log/scan.log 2>&1

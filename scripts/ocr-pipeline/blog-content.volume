@@ -1,0 +1,5 @@
+[Unit]
+Description=Shared content volume for blog pod
+
+[Volume]
+VolumeName=blog-content
