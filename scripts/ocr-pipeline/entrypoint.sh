@@ -24,6 +24,7 @@ hugo server \
   --bind 0.0.0.0 \
   --watch \
   --buildDrafts=false \
+  --renderToMemory \
   --logLevel info \
   &
 
@@ -36,6 +37,7 @@ hugo server \
   --bind 0.0.0.0 \
   --watch \
   --buildDrafts \
+  --renderToMemory \
   --logLevel info \
   &
 
