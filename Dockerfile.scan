@@ -41,6 +41,7 @@ RUN curl -fsSL \
 
 # Pipeline scripts and cron table.
 COPY scripts/ocr-pipeline/scan_to_post.py      /usr/local/bin/scan_to_post.py
+COPY scripts/ocr-pipeline/ocr_backends.py      /usr/local/bin/ocr_backends.py
 COPY scripts/ocr-pipeline/rsync_and_process.sh /usr/local/bin/rsync_and_process.sh
 COPY scripts/ocr-pipeline/crontab.txt           /etc/crontab
 

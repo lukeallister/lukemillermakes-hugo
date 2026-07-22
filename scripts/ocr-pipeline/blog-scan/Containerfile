@@ -37,9 +37,10 @@ RUN apt-get update \
  && chmod +x /usr/local/bin/supercronic
 
 # Pipeline scripts
-COPY scan_askpass.sh     /usr/local/bin/scan_askpass.sh
+COPY scan_askpass.sh      /usr/local/bin/scan_askpass.sh
 COPY rsync_and_process.sh /usr/local/bin/rsync_and_process.sh
 COPY scan_to_post.py      /usr/local/bin/scan_to_post.py
+COPY ocr_backends.py      /usr/local/bin/ocr_backends.py
 COPY crontab.txt          /etc/crontab.d/blog-scan
 
 RUN chmod 0755 /usr/local/bin/scan_askpass.sh \

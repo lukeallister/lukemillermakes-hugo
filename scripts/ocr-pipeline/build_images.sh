@@ -29,6 +29,7 @@ cp "$PIPELINE_DIR/blog-scan/Containerfile" "$BUILDS_DIR/blog-scan/Containerfile"
 cp "$PIPELINE_DIR/blog-scan/scan_askpass.sh" "$BUILDS_DIR/blog-scan/scan_askpass.sh"
 cp "$PIPELINE_DIR/rsync_and_process.sh" "$BUILDS_DIR/blog-scan/rsync_and_process.sh"
 cp "$PIPELINE_DIR/scan_to_post.py"      "$BUILDS_DIR/blog-scan/scan_to_post.py"
+cp "$PIPELINE_DIR/ocr_backends.py"      "$BUILDS_DIR/blog-scan/ocr_backends.py"
 cp "$PIPELINE_DIR/crontab.txt"          "$BUILDS_DIR/blog-scan/crontab.txt"
 
 echo "==> push staging dir to VM"

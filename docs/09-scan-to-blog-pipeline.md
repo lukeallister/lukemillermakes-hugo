@@ -436,3 +436,96 @@ In watch-mode no rebuild is needed — Hugo re-renders on the next save tick (su
 - Migrate publish workflow to a tiny CLI: `blog publish <slug>` that flips `draft: true → false`
 - Add a Telegram/Discord notification on successful draft creation
 - Replace rsync pull with rsync daemon mode + NAS-side push (push is faster on small files)
+
+## 9.13 Modular three-tier OCR fallback
+
+The scan pipeline no longer depends on the former `ocrmypdf --sidecar` pass. After
+`pdftoppm` renders the PDF at 200 DPI, `scan_to_post.py` passes each JPG to the
+provider chain in `scripts/ocr-pipeline/ocr_backends.py`. Each page is processed
+independently, so a failure does not shift later transcripts out of alignment
+with their source images. The provider used for every page is included in the
+pipeline log and result detail.
+
+### Provider order
+
+The default `SCAN_OCR_PROVIDERS=ollama,hermes,tesseract` chain is:
+
+1. **`OllamaDirectOCR`** — calls the local Ollama native `/api/chat` endpoint
+   directly with a base64 image. This is the preferred low-latency path and
+   does not depend on the Hermes API service.
+2. **`HermesVisionOCR`** — calls a Hermes Agent OpenAI-compatible
+   `/v1/chat/completions` endpoint with an inline image. It provides a hosted
+   vision-model fallback when local inference is unavailable.
+3. **`TesseractOCR`** — invokes the `tesseract` binary installed in the
+   `blog-scan` image. It is deliberately always available as the deterministic
+   last resort, so outages or model crashes in both AI tiers do not stop draft
+   creation.
+
+`FallbackOCR` returns the first non-empty transcript and logs provider errors
+before trying the next tier. If all providers fail for a page,
+`recognize_pages()` preserves its position with an empty string and the
+provider marker `failed`.
+
+### Configuration
+
+| Variable | Purpose | Default / requirement |
+|---|---|---|
+| `SCAN_OCR_PROVIDERS` | Comma-separated provider names and priority | `ollama,hermes,tesseract` |
+| `OLLAMA_OCR_URL` | Ollama base URL | `http://192.168.0.8:11434` |
+| `OLLAMA_OCR_MODEL` | Local vision/OCR model | `glm-ocr` |
+| `OLLAMA_OCR_TIMEOUT` | Ollama request timeout in seconds | `120` |
+| `OLLAMA_OCR_PROMPT` | Verbatim-transcription prompt override | Built-in exact-transcription prompt |
+| `HERMES_OCR_URL` | OpenAI-compatible base URL ending in `/v1` | Required to enable Hermes |
+| `HERMES_OCR_API_KEY` | Hermes bearer token | Required to enable Hermes |
+| `HERMES_OCR_MODEL` | Model name advertised by the Hermes API | `hermes-ocr` |
+| `HERMES_OCR_TIMEOUT` | Hermes request timeout in seconds | `120` |
+| `HERMES_OCR_PROMPT` | Hermes transcription prompt override | Built-in exact-transcription prompt |
+| `TESSERACT_LANGUAGE` | Installed Tesseract language pack | `eng` |
+
+Providers can be reordered or disabled without code changes. An Ollama tier
+with a blank URL/model or a Hermes tier without its URL/key is skipped with a
+warning; Tesseract remains usable by default.
+
+### Model status and fallback rationale
+
+Research selected **`glm-ocr`** as the primary local OCR model because it is
+purpose-built for document transcription and fits the available hardware.
+However, it currently crashes on this box. Tested `qwen2.5vl` variants also
+fail during inference with HTTP 500 `unexpected EOF`. These are handled as
+normal provider failures: the chain tries Hermes next and reliably reaches
+Tesseract when both model-backed tiers are unavailable. Tesseract therefore
+remains installed in the scan image rather than being treated as an optional
+external service.
+
+### Manual reprocessing and tests
+
+`scripts/ocr-pipeline/reprocess_draft.py` re-runs the same chain against JPGs
+already present in a Hugo draft bundle, without repeating rsync or PDF
+rendering:
+
+```bash
+python3 scripts/ocr-pipeline/reprocess_draft.py \
+  content/post/_drafts/id-1048 \
+  --out-json /tmp/id-1048-ocr.json
+```
+
+Run it where `tesseract` is installed (normally inside `blog-scan`) if tier 3
+must be exercised. It prints the configured chain and the provider, status,
+character count, and preview for each page.
+
+`tests/test_ocr_backends.py` contains **14 unit tests** covering fallback
+priority, empty/error handling, per-page alignment, Ollama and Hermes request
+formats and response validation, Tesseract invocation, and environment-driven
+chain construction:
+
+```bash
+python3 -m unittest tests/test_ocr_backends.py
+```
+
+### Rootless Podman and SELinux note
+
+On the MicroOS host, SELinux labeling prevented the required `podman exec`
+workflow against the scan container. The Quadlet workaround is
+`SecurityLabelDisable=true` in `blog-scan.container`. The operational rationale
+and host-specific notes are documented under `/opt/data/documentation/homelab/`,
+including `scan-ocr-model-recommendations.md`.
