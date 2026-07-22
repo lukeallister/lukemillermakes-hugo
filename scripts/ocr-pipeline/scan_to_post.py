@@ -338,7 +338,7 @@ def process_one(
             raise RuntimeError("pdftoppm produced no images")
 
         # 2. OCR each rendered page through the configured provider chain.
-        # Hermes vision is preferred when configured; Tesseract is the local,
+        # Direct Ollama vision is preferred; Tesseract is the local,
         # deterministic fallback. A failure on one page does not shift later
         # transcripts out of alignment with their images.
         ocr_chain = build_ocr_chain_from_env()

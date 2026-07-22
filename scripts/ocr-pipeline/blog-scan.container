@@ -5,6 +5,7 @@ Description=Scan pipeline sidecar — Phase 9 rsync pull + OCR + draft creation
 Image=localhost/blog-scan:latest
 ContainerName=blog-scan
 Pod=blog.pod
+SecurityLabelDisable=true
 Volume=blog-content:/site
 # Absolute paths required — podman parses the source side of a Volume=
 # directive as a named-volume name, and rejects `~` and `..` segments.
@@ -15,12 +16,10 @@ Volume=/home/hermes/.local/share/blog-scans/processed:/processed:z
 Volume=/home/hermes/.local/share/blog-scans/failed:/failed:z
 Volume=/home/hermes/.local/share/blog-scans/state:/var/lib/scan:z
 Volume=/home/hermes/.config/blog-scan/rsyncd.password:/etc/rsyncd.password:ro,z
-EnvironmentFile=/home/hermes/.config/blog-scan/hermes-ocr.env
-Environment=SCAN_OCR_PROVIDERS=ollama,hermes,tesseract
+Environment=SCAN_OCR_PROVIDERS=ollama,tesseract
 Environment=OLLAMA_OCR_URL=http://192.168.0.8:11434
 Environment=OLLAMA_OCR_MODEL=glm-ocr
-Environment=HERMES_OCR_URL=http://192.168.0.53:8643/v1
-Environment=HERMES_OCR_MODEL=hermes-ocr
+Environment=OLLAMA_OCR_TIMEOUT=300
 
 # rsync:// URL — Synology exposes the NAS shared folder as an rsync module
 # named "NAS", with the scan PDFs at /volume1/NAS/blog-scans/ on the server.

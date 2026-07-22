@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reprocess a draft post's existing images through the three-tier OCR chain.
+"""Reprocess a draft post's existing images through the configured OCR chain.
 
 This is the "manual reprocess" path that runs alongside the live scan
 sidecar. It exercises the same ocr_backends.recognize_pages() helper that

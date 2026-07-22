@@ -224,13 +224,15 @@ class TesseractOCR:
 def build_ocr_chain_from_env() -> FallbackOCR:
     """Create the configured provider chain.
 
-    Three-tier fallback:
-      1. ollama   — direct local Ollama (survives Hermes outages)
-      2. hermes   — Hermes Agent API server (routed to a Nous fallback model)
-      3. tesseract — last-resort local OCR
+    Default two-tier fallback:
+      1. ollama    — direct local Ollama (no gateway or OCR profile involved)
+      2. tesseract — local deterministic fallback
+
+    ``hermes`` remains available as an optional provider for explicit
+    ``SCAN_OCR_PROVIDERS`` overrides, but it is not part of the default path.
 
     Environment:
-      SCAN_OCR_PROVIDERS      comma-separated names (default ollama,hermes,tesseract)
+      SCAN_OCR_PROVIDERS      comma-separated names (default ollama,tesseract)
       OLLAMA_OCR_URL          local Ollama base URL (default http://192.168.0.8:11434)
       OLLAMA_OCR_MODEL        vision/OCR model to call directly (default glm-ocr)
       OLLAMA_OCR_TIMEOUT      request timeout seconds
@@ -244,7 +246,7 @@ def build_ocr_chain_from_env() -> FallbackOCR:
     """
     names = [
         name.strip().lower()
-        for name in os.getenv("SCAN_OCR_PROVIDERS", "ollama,hermes,tesseract").split(",")
+        for name in os.getenv("SCAN_OCR_PROVIDERS", "ollama,tesseract").split(",")
         if name.strip()
     ]
     providers = []
@@ -259,7 +261,7 @@ def build_ocr_chain_from_env() -> FallbackOCR:
                 endpoint=endpoint,
                 model=model,
                 prompt=os.getenv("OLLAMA_OCR_PROMPT", DEFAULT_PROMPT),
-                timeout=float(os.getenv("OLLAMA_OCR_TIMEOUT", "120")),
+                timeout=float(os.getenv("OLLAMA_OCR_TIMEOUT", "300")),
             ))
         elif name == "hermes":
             endpoint = os.getenv("HERMES_OCR_URL", "").strip()

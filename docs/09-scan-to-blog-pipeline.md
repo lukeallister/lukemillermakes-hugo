@@ -437,7 +437,7 @@ In watch-mode no rebuild is needed — Hugo re-renders on the next save tick (su
 - Add a Telegram/Discord notification on successful draft creation
 - Replace rsync pull with rsync daemon mode + NAS-side push (push is faster on small files)
 
-## 9.13 Modular three-tier OCR fallback
+## 9.13 Modular two-tier OCR fallback
 
 The scan pipeline no longer depends on the former `ocrmypdf --sidecar` pass. After
 `pdftoppm` renders the PDF at 200 DPI, `scan_to_post.py` passes each JPG to the
@@ -448,18 +448,20 @@ pipeline log and result detail.
 
 ### Provider order
 
-The default `SCAN_OCR_PROVIDERS=ollama,hermes,tesseract` chain is:
+The default `SCAN_OCR_PROVIDERS=ollama,tesseract` chain is:
 
 1. **`OllamaDirectOCR`** — calls the local Ollama native `/api/chat` endpoint
    directly with a base64 image. This is the preferred low-latency path and
    does not depend on the Hermes API service.
-2. **`HermesVisionOCR`** — calls a Hermes Agent OpenAI-compatible
-   `/v1/chat/completions` endpoint with an inline image. It provides a hosted
-   vision-model fallback when local inference is unavailable.
-3. **`TesseractOCR`** — invokes the `tesseract` binary installed in the
+2. **`TesseractOCR`** — invokes the `tesseract` binary installed in the
    `blog-scan` image. It is deliberately always available as the deterministic
-   last resort, so outages or model crashes in both AI tiers do not stop draft
+   fallback, so an Ollama outage or model crash does not stop draft
    creation.
+
+`HermesVisionOCR` remains available for an explicit environment override, but
+Hermes is not in the default chain. The sidecar calls Ollama directly at
+`http://192.168.0.8:11434`; the Hermes OCR gateway and OCR profile are not in
+the request path.
 
 `FallbackOCR` returns the first non-empty transcript and logs provider errors
 before trying the next tier. If all providers fail for a page,
@@ -470,10 +472,10 @@ provider marker `failed`.
 
 | Variable | Purpose | Default / requirement |
 |---|---|---|
-| `SCAN_OCR_PROVIDERS` | Comma-separated provider names and priority | `ollama,hermes,tesseract` |
+| `SCAN_OCR_PROVIDERS` | Comma-separated provider names and priority | `ollama,tesseract` |
 | `OLLAMA_OCR_URL` | Ollama base URL | `http://192.168.0.8:11434` |
 | `OLLAMA_OCR_MODEL` | Local vision/OCR model | `glm-ocr` |
-| `OLLAMA_OCR_TIMEOUT` | Ollama request timeout in seconds | `120` |
+| `OLLAMA_OCR_TIMEOUT` | Ollama request timeout in seconds | `300` |
 | `OLLAMA_OCR_PROMPT` | Verbatim-transcription prompt override | Built-in exact-transcription prompt |
 | `HERMES_OCR_URL` | OpenAI-compatible base URL ending in `/v1` | Required to enable Hermes |
 | `HERMES_OCR_API_KEY` | Hermes bearer token | Required to enable Hermes |
@@ -491,11 +493,25 @@ warning; Tesseract remains usable by default.
 Research selected **`glm-ocr`** as the primary local OCR model because it is
 purpose-built for document transcription and fits the available hardware.
 However, it currently crashes on this box. Tested `qwen2.5vl` variants also
-fail during inference with HTTP 500 `unexpected EOF`. These are handled as
-normal provider failures: the chain tries Hermes next and reliably reaches
-Tesseract when both model-backed tiers are unavailable. Tesseract therefore
-remains installed in the scan image rather than being treated as an optional
-external service.
+fail during inference with HTTP 500 `unexpected EOF`. This is handled as a
+normal provider failure: the chain falls directly back to Tesseract. Tesseract
+therefore remains installed in the scan image rather than being treated as an
+optional external service.
+
+### Validated end-to-end result (2026-07-22)
+
+A synthetic 1200×800 JPG containing `Hello world test 12345` was processed
+inside the MicroOS `blog-scan` container with only
+`SCAN_OCR_PROVIDERS=ollama,tesseract`:
+
+- With `OLLAMA_OCR_MODEL=gemma3:4b`, direct Ollama served the page and returned
+  `Hello world test 12345` (exit 0, 5 seconds).
+- With the production default `OLLAMA_OCR_MODEL=glm-ocr`, Ollama returned HTTP
+  500 `unexpected EOF`; the same invocation automatically fell through to
+  Tesseract, which returned `Hello world test 12345` (exit 0, 3 seconds).
+
+This validates both the primary direct-Ollama path and the Tesseract fallback.
+No Hermes gateway or OCR profile was involved.
 
 ### Manual reprocessing and tests
 
@@ -513,7 +529,7 @@ Run it where `tesseract` is installed (normally inside `blog-scan`) if tier 3
 must be exercised. It prints the configured chain and the provider, status,
 character count, and preview for each page.
 
-`tests/test_ocr_backends.py` contains **14 unit tests** covering fallback
+`tests/test_ocr_backends.py` contains **15 unit tests** covering fallback
 priority, empty/error handling, per-page alignment, Ollama and Hermes request
 formats and response validation, Tesseract invocation, and environment-driven
 chain construction:

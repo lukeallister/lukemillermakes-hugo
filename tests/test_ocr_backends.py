@@ -179,6 +179,18 @@ class OllamaDirectOCRTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_default_chain_is_direct_ollama_then_tesseract(self):
+        with patch.dict(ocr_backends.os.environ, {}, clear=True):
+            chain = ocr_backends.build_ocr_chain_from_env()
+
+        self.assertEqual([p.__class__ for p in chain.providers], [
+            ocr_backends.OllamaDirectOCR,
+            ocr_backends.TesseractOCR,
+        ])
+        self.assertEqual(chain.providers[0].endpoint, "http://192.168.0.8:11434")
+        self.assertEqual(chain.providers[0].model, "glm-ocr")
+        self.assertEqual(chain.providers[0].timeout, 300.0)
+
     def test_builds_ollama_then_hermes_then_tesseract_chain_from_environment(self):
         env = {
             "SCAN_OCR_PROVIDERS": "ollama,hermes,tesseract",
