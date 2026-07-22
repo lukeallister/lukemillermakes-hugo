@@ -403,13 +403,48 @@ curl -s -o /dev/null -w "stage 8081: %{http_code}\n" http://192.168.1.126:8081/
 ssh hermes@192.168.1.126 \
   'sed -i "s/^draft: true/draft: false/" ~/.local/share/containers/blog/content/post/YYYY-MM-DD-slug/index.md'
 
-# Option 2: edit locally, sync, rebuild (no rebuild needed in watch-mode, just wait 1s)
+# Option 2: edit locally, sync, then wait for Hugo watch-mode
 # 1. edit draft: true → draft: false
 # 2. rsync the change to the VM
-# 3. both Hugo processes pick it up automatically; prod now shows it
+# 3. wait at least one --watch rebuild cycle (~5–10 seconds)
+# 4. both Hugo processes pick it up automatically; prod now shows it
 ```
 
-In watch-mode no rebuild is needed — Hugo re-renders on the next save tick (sub-second).
+In watch-mode no manual rebuild is needed. Allow approximately 5–10 seconds
+for both Hugo processes to observe the save and finish rebuilding before
+checking either endpoint.
+
+### Verified Draft Publish Workflow (prod 8080 vs stage 8081)
+
+The live workflow was verified on **2026-07-22** against
+`http://192.168.1.126:8080` (production) and
+`http://192.168.1.126:8081` (stage).
+
+- Draft posts (`draft: true`) appear **only** on stage, where Hugo runs with
+  `--buildDrafts` enabled.
+- Published posts (`draft: false`) appear on **both** production and stage.
+- The complete publish/unpublish round trip produced the expected matrix:
+
+  | Front matter state | Production (`:8080`) | Stage (`:8081`) |
+  |---|---:|---:|
+  | Initial `draft: true` | `404` | `200` |
+  | Flip to `draft: false` | `200` | `200` |
+  | Flip back to `draft: true` | `404` | `200` |
+
+Both endpoints are served by the **same `blog-hugo` container**: one
+container runs two independent `hugo server` processes, while both processes
+share `/site/content/` and `.hugo_cache/`. Their render results remain isolated
+by `--renderToMemory`, so stage cannot leak a rendered draft into production.
+Hugo `--watch` rebuilds after a content change within approximately 5–10
+seconds on the live system.
+
+Operational caveats:
+
+- Wait at least one Hugo `--watch` rebuild cycle (approximately 5–10 seconds)
+  after changing `draft` before probing the ports.
+- Do not run flip tests during container restart windows.
+- A `draft: false` → `draft: true` round trip can be racy if the container is
+  restarting; wait until both Hugo processes are stable before testing.
 
 ## 9.11 Resolved open questions
 
