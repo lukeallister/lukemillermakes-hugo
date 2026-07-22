@@ -157,6 +157,7 @@ class OllamaDirectOCRTests(unittest.TestCase):
             self.assertEqual(body["model"], "glm-ocr")
             self.assertEqual(body["messages"][0]["content"], ocr_backends.DEFAULT_PROMPT)
             self.assertEqual(body["messages"][0]["images"], ["anBlZy1kYXRh"])
+            self.assertEqual(body["options"]["num_ctx"], 8192)
             self.assertEqual(text, "Direct OCR transcript")
 
     def test_rejects_empty_or_invalid_ollama_responses(self):
@@ -196,6 +197,7 @@ class ConfigurationTests(unittest.TestCase):
             "SCAN_OCR_PROVIDERS": "ollama,hermes,tesseract",
             "OLLAMA_OCR_URL": "http://192.168.0.8:11434",
             "OLLAMA_OCR_MODEL": "glm-ocr",
+            "OLLAMA_OCR_CONTEXT": "4096",
             "HERMES_OCR_URL": "http://host:8643/v1",
             "HERMES_OCR_API_KEY": "key",
             "HERMES_OCR_MODEL": "hermes-ocr",

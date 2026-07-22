@@ -20,6 +20,7 @@ Environment=SCAN_OCR_PROVIDERS=ollama,tesseract
 Environment=OLLAMA_OCR_URL=http://192.168.0.8:11434
 Environment=OLLAMA_OCR_MODEL=glm-ocr
 Environment=OLLAMA_OCR_TIMEOUT=300
+Environment=OLLAMA_OCR_CONTEXT=8192
 
 # rsync:// URL — Synology exposes the NAS shared folder as an rsync module
 # named "NAS", with the scan PDFs at /volume1/NAS/blog-scans/ on the server.

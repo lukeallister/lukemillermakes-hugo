@@ -170,6 +170,9 @@ class OllamaDirectOCR:
         payload = {
             "model": self.model,
             "stream": False,
+            # GLM-OCR's native 128K default reserves about 6.5 GB on this
+            # 8 GB GPU and crashes the Ollama runner. OCR pages need far less.
+            "options": {"num_ctx": 8192},
             "messages": [{
                 "role": "user",
                 "content": self.prompt,
@@ -236,6 +239,7 @@ def build_ocr_chain_from_env() -> FallbackOCR:
       OLLAMA_OCR_URL          local Ollama base URL (default http://192.168.0.8:11434)
       OLLAMA_OCR_MODEL        vision/OCR model to call directly (default glm-ocr)
       OLLAMA_OCR_TIMEOUT      request timeout seconds
+      OLLAMA_OCR_CONTEXT      Ollama context tokens (default 8192; constrains VRAM)
       OLLAMA_OCR_PROMPT       optional transcription prompt
       HERMES_OCR_URL          OpenAI-compatible base URL ending in /v1
       HERMES_OCR_API_KEY      bearer token
