@@ -257,7 +257,7 @@ def build_ocr_chain_from_env() -> FallbackOCR:
     for name in names:
         if name == "ollama":
             endpoint = os.getenv("OLLAMA_OCR_URL", "http://192.168.0.8:11434").strip()
-            model = os.getenv("OLLAMA_OCR_MODEL", "glm-ocr").strip()
+            model = os.getenv("OLLAMA_OCR_MODEL", "hf.co/unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL").strip()
             if not endpoint or not model:
                 LOG.warning("Ollama OCR is configured but URL/model is missing; skipping")
                 continue
