@@ -4,7 +4,6 @@ public_v2/
 public_v3/
 
 # Hugo caches.
-resources/
 resources/_gen/
 .hugo_build.lock
 
@@ -18,17 +17,3 @@ themes/xmin/.git
 
 # Header screenshots from visual QA.
 header-screenshot.png
-
-# Secrets
-*.env
-.env
-.env.*
-*credentials*
-*api-key*
-*api_key*
-.wikijs-api-key
-
-# Python
-__pycache__/
-*.pyc
-node_modules/

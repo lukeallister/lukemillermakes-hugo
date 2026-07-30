@@ -33,8 +33,6 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ocr_backends import build_ocr_chain_from_env, recognize_pages
-
 LOG = logging.getLogger("scan_to_post")
 
 # Filename pattern: YYYYMMDD_slug.pdf (slug may contain letters, digits, hyphens,
@@ -282,19 +280,6 @@ def write_post_bundle(
     if ocr_pages:
         (bundle / "ocr_raw.txt").write_text("\n\n---\n\n".join(ocr_pages))
 
-    # The blog-scan container runs as root; blog-hugo runs as the `hugo` user
-    # (uid 1000) and needs to read these files to publish resources. Without
-    # this chown, Hugo crashes on a permission-denied error when it tries to
-    # open images/page-01.jpg for the Resource publish step. See Phase 9 §9.8
-    # deployment pitfalls.
-    try:
-        subprocess.run(
-            ["chown", "-R", "1000:1000", str(bundle)],
-            check=False,  # non-fatal; Hugo will surface the error in logs.
-        )
-    except FileNotFoundError:
-        pass  # chown may not exist on minimal images — best-effort.
-
     return bundle
 
 
@@ -337,13 +322,14 @@ def process_one(
         if not images:
             raise RuntimeError("pdftoppm produced no images")
 
-        # 2. OCR each rendered page through the configured provider chain.
-        # Direct Ollama vision is preferred; Tesseract is the local,
-        # deterministic fallback. A failure on one page does not shift later
-        # transcripts out of alignment with their images.
-        ocr_chain = build_ocr_chain_from_env()
-        raw_pages, provider_names = recognize_pages(ocr_chain, images)
-        ocr_pages = [clean_ocr_text([page])[0] if page.strip() else "" for page in raw_pages]
+        # 2. OCR → sidecar
+        sidecar = work / "ocr.txt"
+        try:
+            raw_pages = ocr_pdf(pdf, sidecar)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"ocrmypdf failed: {e}") from e
+
+        ocr_pages = clean_ocr_text(raw_pages)
 
         # 3. Write the bundle
         bundle = write_post_bundle(
@@ -357,14 +343,9 @@ def process_one(
 
         # 4. Move original to processed
         move_to(pdf, processed_dir)
-        LOG.info("ok: %s → %s (pages=%d, ocr_pages=%d, providers=%s)",
-                 pdf.name, bundle, len(images),
-                 sum(bool(page) for page in ocr_pages), ",".join(provider_names))
-        return True, (
-            f"{bundle} ({len(images)} pages, "
-            f"{sum(bool(page) for page in ocr_pages)} OCR; "
-            f"providers={','.join(provider_names)})"
-        )
+        LOG.info("ok: %s → %s (pages=%d, ocr_pages=%d)",
+                 pdf.name, bundle, len(images), len(ocr_pages))
+        return True, f"{bundle} ({len(images)} pages, {len(ocr_pages)} OCR)"
     except Exception as e:
         LOG.exception("failed: %s: %s", pdf.name, e)
         move_to(pdf, failed_dir)

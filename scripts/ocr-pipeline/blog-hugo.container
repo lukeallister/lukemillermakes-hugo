@@ -5,11 +5,9 @@ Description=Hugo server (prod + stage) — Phase 9 scan pipeline core service
 Image=localhost/blog-hugo:latest
 ContainerName=blog-hugo
 Pod=blog.pod
+PublishPort=8080:8080
+PublishPort=8081:8081
 Volume=blog-content:/site
-
-# NOTE: PublishPort= belongs on the pod quadlet (blog.pod), not here.
-# Containers in a pod share the pod's network namespace and cannot
-# redefine port mappings. See Phase 9 §9.8 deployment pitfalls.
 
 [Service]
 Restart=always

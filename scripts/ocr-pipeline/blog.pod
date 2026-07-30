@@ -3,8 +3,6 @@ Description=Blog pod (Hugo + scan sidecar)
 
 [Pod]
 PodName=blog
-PublishPort=8080:8080
-PublishPort=8081:8081
 
 [Install]
 WantedBy=default.target

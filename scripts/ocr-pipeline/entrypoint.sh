@@ -15,16 +15,11 @@ set -euo pipefail
 export HUGO_BASEURL="https://lukemillermakes.com/"
 
 echo "[entrypoint] starting PROD hugo server on :8080 (published only)"
-# IMPORTANT: hugo server's DEFAULT is --buildDrafts=true regardless of
-# hugo.yaml's buildDrafts:false. We must pass --buildDrafts=false explicitly
-# so prod does not leak drafts to the public site.
 hugo server \
   --source /site \
   --port 8080 \
   --bind 0.0.0.0 \
   --watch \
-  --buildDrafts=false \
-  --renderToMemory \
   --logLevel info \
   &
 
@@ -37,7 +32,6 @@ hugo server \
   --bind 0.0.0.0 \
   --watch \
   --buildDrafts \
-  --renderToMemory \
   --logLevel info \
   &
 
