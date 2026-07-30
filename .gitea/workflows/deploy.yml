@@ -1,0 +1,42 @@
+name: deploy-blog
+on:
+  push:
+    branches: [master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    container:
+      image: hugomods/hugo:exts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: build (drafts excluded)
+        run: hugo --minify --buildDrafts=false --destination /tmp/hugo-check
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: rsync into microos blog-content volume
+        env:
+          KEY: ${{ secrets.MICROOS_SSH_KEY }}
+          HOST: 192.168.1.126
+          USER: hermes
+          DEST: /home/hermes/.local/share/containers/storage/volumes/blog-content/_data
+        run: |
+          apk add --no-cache openssh-client rsync
+          install -m 600 -D <(printf '%s\n' "$KEY") /root/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> /root/.ssh/known_hosts 2>/dev/null
+          # Delete-synced so removed posts propagate; themes/public are repo-excluded
+          rsync -az --delete ./content/ "$USER@$HOST:$DEST/content/"
+          rsync -az ./hugo.yaml ./archetypes ./layouts ./static ./assets \
+                ./Dockerfile ./Dockerfile.hugo ./Dockerfile.scan ./nginx.conf ./docs ./scripts \
+                "$USER@$HOST:$DEST/" 2>/dev/null || true
+          echo "deploy -> $HOST done"
