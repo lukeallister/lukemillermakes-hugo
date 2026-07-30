@@ -44,3 +44,4 @@ jobs:
                 ./Dockerfile ./Dockerfile.hugo ./Dockerfile.scan ./nginx.conf ./docs ./scripts \
                 "$USER@$HOST:$DEST/" 2>/dev/null || true
           echo "deploy -> $HOST done"
+# deploy workflow verified under Gitea 1.22.6
