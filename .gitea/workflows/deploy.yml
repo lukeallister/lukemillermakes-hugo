@@ -20,21 +20,24 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: alpine:latest
+      # Explicitly mount alma9's SSH (keyless to microos hermes) into the job container.
+      # (The runner-level DOCKER_VOLUMES env is not honored by act_runner 0.6.1.)
+      volumes:
+        - /home/hermes/.ssh:/root/.ssh:ro
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: false
-      - name: rsync into microos blog-content volume (hermes + sudo rsync, no chown of live tree)
+      - name: rsync into microos blog-content volume (hermes + sudo rsync)
         env:
           HOST: 192.168.1.126
           USER: hermes
           DEST: /home/hermes/.local/share/containers/storage/volumes/blog-content/_data
         run: |
           apk add --no-cache openssh-client rsync
-          # Runner mounts alma9's ~/.ssh (keyless to microos hermes) as /root/.ssh:ro
           chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true
           ssh -o StrictHostKeyChecking=accept-new "$USER@$HOST" "echo microos-reachable"
-          # debug re-run
+          # volume content/ is owned by uid 100999 (blog-hugo container); hermes cannot
           # write it directly, so the REMOTE rsync runs via passwordless sudo. Files are
           # chowned to hermes so no root-owned leftovers accumulate. No root SSH login.
           rsync -az --delete --rsync-path="sudo rsync" --chown=hermes:hermes \
@@ -44,4 +47,3 @@ jobs:
                 ./Dockerfile ./Dockerfile.hugo ./Dockerfile.scan ./nginx.conf ./docs ./scripts \
                 "$USER@$HOST:$DEST/" 2>/dev/null || true
           echo "deploy -> $HOST done"
-# deploy workflow verified under Gitea 1.22.6
