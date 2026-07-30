@@ -26,15 +26,14 @@ jobs:
           submodules: false
       - name: rsync into microos blog-content volume
         env:
-          KEY: ${{ secrets.MICROOS_SSH_KEY }}
           HOST: 192.168.1.126
           USER: hermes
           DEST: /home/hermes/.local/share/containers/storage/volumes/blog-content/_data
         run: |
           apk add --no-cache openssh-client rsync
-          install -m 600 -D <(printf '%s\n' "$KEY") /root/.ssh/id_ed25519
-          ssh-keyscan -H "$HOST" >> /root/.ssh/known_hosts 2>/dev/null
-          # Delete-synced so removed posts propagate; themes/public are repo-excluded
+          # Runner mounts alma9's ~/.ssh (keyless to microos) as /root/.ssh:ro
+          chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true
+          ssh -o StrictHostKeyChecking=accept-new "$USER@$HOST" "echo microos-reachable"
           rsync -az --delete ./content/ "$USER@$HOST:$DEST/content/"
           rsync -az ./hugo.yaml ./archetypes ./layouts ./static ./assets \
                 ./Dockerfile ./Dockerfile.hugo ./Dockerfile.scan ./nginx.conf ./docs ./scripts \
