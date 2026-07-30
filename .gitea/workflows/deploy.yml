@@ -34,7 +34,7 @@ jobs:
           # Runner mounts alma9's ~/.ssh (keyless to microos hermes) as /root/.ssh:ro
           chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true
           ssh -o StrictHostKeyChecking=accept-new "$USER@$HOST" "echo microos-reachable"
-          # volume content/ is owned by uid 100999 (blog-hugo container); hermes cannot
+          # debug re-run
           # write it directly, so the REMOTE rsync runs via passwordless sudo. Files are
           # chowned to hermes so no root-owned leftovers accumulate. No root SSH login.
           rsync -az --delete --rsync-path="sudo rsync" --chown=hermes:hermes \
