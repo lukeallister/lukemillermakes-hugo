@@ -436,3 +436,77 @@ In watch-mode no rebuild is needed — Hugo re-renders on the next save tick (su
 - Migrate publish workflow to a tiny CLI: `blog publish <slug>` that flips `draft: true → false`
 - Add a Telegram/Discord notification on successful draft creation
 - Replace rsync pull with rsync daemon mode + NAS-side push (push is faster on small files)
+## 9.13 Incident 2026-07-30 — pipeline stopped producing posts (exec bit lost)
+
+**Symptom:** three new scans rsynced into `/inbox` but no drafts appeared. From
+the outside the pipeline looked dead.
+
+**Diagnosis:** `podman logs blog-scan` showed supercronic firing every 30 min and
+failing with `error running command: exit status 126`. The real error was in
+`/var/log/scan.log` inside the container:
+
+```
+[rsync_and_process] rsync ok
+/usr/local/bin/rsync_and_process.sh: line 32: /usr/local/bin/scan_to_post.py: Permission denied
+```
+
+`ls -laZ /usr/local/bin` showed `scan_to_post.py` at mode **600** — no execute
+bit — while SELinux labels were consistent (`container_file_t:s0:c1022,c1023`),
+ruling out MCS drift. The `.py` files had been replaced in the image on Jul 23
+without the exec bit; the last successful posts date from that same day.
+
+Exit status **126 = "found but not executable"** (127 would be "not found").
+rsync had succeeded throughout, so the inbox kept filling while nothing was
+processed. Nothing was written to `/failed` either, because the failure happened
+before `scan_to_post.py` ever ran — so the `failed/` directory is *not* a
+reliable health signal on its own.
+
+**Immediate fix:** `podman exec blog-scan chmod 755 /usr/local/bin/*.py`, then a
+manual `rsync_and_process.sh` run, which processed all pending scans.
+
+**Durable fix:** `Dockerfile.scan` was hardened so the image can't regress:
+
+- `reprocess_draft.py` is now `COPY`'d explicitly (previously it only ever
+  reached the image via an ad-hoc copy — the likely origin of the bad mode).
+- the chmod covers all four pipeline scripts:
+
+```dockerfile
+RUN chmod 0755 /usr/local/bin/scan_to_post.py /usr/local/bin/ocr_backends.py \
+       /usr/local/bin/reprocess_draft.py /usr/local/bin/rsync_and_process.sh \
+    && mkdir -p /var/lib/scan
+```
+
+The image was rebuilt and `blog-scan.service` restarted. Backup of the previous
+Dockerfile: `Dockerfile.scan.bak-20260730`.
+
+**Pitfall found during the fix:** restarting only `blog-scan.service` left the
+container with a stale pod netns — rsync failed with
+`Network is unreachable` even though the NAS pinged fine from the host. Restart
+the **whole pod** (`systemctl --user restart blog-pod.service`) after
+recreating a single container in the pod.
+
+### Health check
+
+```bash
+# 1. is cron actually succeeding? (exit 126/127 here = perms/missing binary)
+podman logs --tail 20 blog-scan
+
+# 2. the real error text lives inside the container
+podman exec blog-scan tail -40 /var/log/scan.log
+
+# 3. exec bits must be 755 on all four scripts
+podman exec blog-scan ls -la /usr/local/bin/
+
+# 4. anything stuck in the inbox that isn't in state?
+ls ~/.local/share/blog-scans/inbox/
+cat ~/.local/share/blog-scans/state/.processed.json
+
+# 5. force a run rather than waiting for the */30 tick
+podman exec blog-scan /usr/local/bin/rsync_and_process.sh
+```
+
+A healthy manual run ends with
+`done: new=<n> skipped=<n> failed=0` and exit 0.
+
+Once a draft exists, publishing it is a separate path — see
+`10-cicd-deploy-runbook.md`.
