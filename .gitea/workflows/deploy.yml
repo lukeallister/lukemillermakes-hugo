@@ -19,7 +19,7 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     container:
-      image: node:18-alpine
+      image: node:18-bullseye
       # Explicitly mount alma9's SSH (keyless to microos hermes) into the job container.
       # (The runner-level DOCKER_VOLUMES env is not honored by act_runner 0.6.1.)
       volumes:
@@ -27,14 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
       - name: rsync into microos blog-content volume (hermes + sudo rsync)
         env:
           HOST: 192.168.1.126
           USER: hermes
           DEST: /home/hermes/.local/share/containers/storage/volumes/blog-content/_data
         run: |
-          apk add --no-cache openssh-client rsync
+          apt-get update -qq && apt-get install -y -qq openssh-client rsync >/dev/null
           chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true
           ssh -o StrictHostKeyChecking=accept-new "$USER@$HOST" "echo microos-reachable"
           # volume content/ is owned by uid 100999 (blog-hugo container); hermes cannot
