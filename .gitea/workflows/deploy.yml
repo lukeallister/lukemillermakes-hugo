@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: false
+          submodules: true
       - name: build (drafts excluded)
         run: hugo --minify --buildDrafts=false --destination /tmp/hugo-check
 
