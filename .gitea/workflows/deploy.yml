@@ -19,7 +19,7 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     container:
-      image: alpine:latest
+      image: node:18-alpine
       # Explicitly mount alma9's SSH (keyless to microos hermes) into the job container.
       # (The runner-level DOCKER_VOLUMES env is not honored by act_runner 0.6.1.)
       volumes:
@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: false
+          submodules: true
       - name: rsync into microos blog-content volume (hermes + sudo rsync)
         env:
           HOST: 192.168.1.126
