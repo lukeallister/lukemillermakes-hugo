@@ -1,7 +1,7 @@
 ---
-title: "Im Building a Modular Synth"
+title: "I'm Building a Modular Synth"
 date: 2026-07-30T12:00:00.000Z
-draft: true
+draft: false
 categories: ["typosphere"]
 tags: ["scan"]
 ---
