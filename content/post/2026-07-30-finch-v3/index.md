@@ -8,6 +8,8 @@ tags: ["scan"]
 
 ![Page 1](images/page-01.jpg)
 
+![keyboard](images/finch_kb_1080p.jpg)
+
 <details>
 <summary>OCR text transcript</summary>
 
