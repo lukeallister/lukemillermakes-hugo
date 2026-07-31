@@ -2,7 +2,7 @@
 title: "Finch V3"
 date: 2026-07-30T12:00:00.000Z
 draft: true
-categories: ["typosphere"]
+categories: ["typosphere","keyboard","pcb","making"]
 tags: ["scan"]
 ---
 
@@ -11,19 +11,19 @@ tags: ["scan"]
 <details>
 <summary>OCR text transcript</summary>
 
-This is V3 of my fuch kb.
+This is V3 of my finch kb.
 The first was hardwired in a 3d printed case.
 The second was one of my
-pcbs but I used a lot
+pcbs but I used a bad
 footprint that didn't
 allow the RH so
 have only a LH.
 This one needs just
 a few more tweaks
-and then I'll redo
+and then I'll redo it
 
 I drew the
-fuch. I hope
+finch. I hope
 it comes
 clean.
 

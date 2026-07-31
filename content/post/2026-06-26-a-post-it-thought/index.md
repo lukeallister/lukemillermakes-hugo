@@ -1,7 +1,7 @@
 ---
 title: "A Post It Thought"
 date: 2026-06-26T12:00:00.000Z
-draft: true
+draft: false
 categories: ["typosphere"]
 tags: ["scan"]
 ---
