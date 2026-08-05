@@ -1,0 +1,151 @@
+/* ============================================================
+   Wide layout, theme toggle, and dark mode
+   ------------------------------------------------------------
+   Loaded AFTER bootstrap.min.css / palette.css / style.css /
+   fonts.css / custom.css, so its declarations win the cascade.
+   ============================================================ */
+
+/* ---------- Responsive width (base column is 80% in custom.css) ---------- */
+@media (max-width: 700px) {
+  body {
+    max-width: 92%;
+    padding: 0 0.9rem;
+  }
+  nav, nav ul.menu, .menu {
+    margin-left: -0.9rem !important;
+    margin-right: -0.9rem !important;
+  }
+}
+
+/* ---------- Nav top row: site title left, toggle right ---------- */
+.nav-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.nav-top .site-title {
+  margin: 0;
+}
+
+/* ---------- Theme toggle button (upper right) ---------- */
+.theme-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color-nav-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.theme-toggle:hover {
+  background-color: var(--color-nav-text);
+  color: var(--color-nav-bg);
+  border-color: var(--color-nav-text);
+  transform: scale(1.05);
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+}
+
+/* Show sun in light mode, moon in dark mode */
+.theme-toggle .icon-sun  { display: block; }
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun  { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+/* ---------- Dark mode palette (named tokens live in palette.css) ---------- */
+[data-theme="dark"] {
+  --color-bg:         var(--palette-dark-bg);
+  --color-surface:    var(--palette-dark-surface);
+  --color-text:       var(--palette-dark-text);
+  --color-text-muted: var(--palette-dark-muted);
+  --color-link:       var(--palette-dark-link);
+  --color-link-hover: var(--palette-dark-link-h);
+  --color-border:     var(--palette-dark-border);
+  --color-accent:     var(--palette-dark-accent);
+  --color-nav-bg:     var(--palette-dark-banner);
+  --color-nav-text:   var(--palette-dark-invert);
+  --color-post-head:  var(--palette-dark-phead);
+
+  --bs-body-bg:          var(--palette-dark-bg);
+  --bs-body-color:       var(--palette-dark-text);
+  --bs-link-color:       var(--palette-dark-link);
+  --bs-link-hover-color: var(--palette-dark-link-h);
+}
+
+/* In dark mode, link + heading colors must come from the dark palette,
+   not the light-mode greens defined in custom.css :root. */
+[data-theme="dark"] a {
+  color: var(--color-link);
+}
+[data-theme="dark"] a:hover {
+  color: var(--color-link-hover);
+}
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--color-post-head);  /* light secondary (teal) */
+  border-bottom-color: var(--color-accent);
+}
+[data-theme="dark"] .post-list-title a {
+  color: var(--gray-4);  /* almost white, for contrast on the gray card */
+}
+[data-theme="dark"] .post-list-title a:hover {
+  color: var(--color-link-hover);
+}
+
+/* Banner + nav adopt the crimson banner color */
+[data-theme="dark"] nav {
+  background-color: var(--color-nav-bg);
+  color: var(--color-nav-text);
+  border-bottom: 2px solid var(--color-accent);
+}
+[data-theme="dark"] nav a,
+[data-theme="dark"] nav .site-title {
+  color: var(--color-nav-text);
+}
+[data-theme="dark"] nav a:hover {
+  color: var(--color-link-hover);
+}
+
+/* Component tweaks that the semantic vars don't fully cover */
+[data-theme="dark"] main th {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+[data-theme="dark"] main code {
+  background-color: var(--color-surface);
+  color: var(--color-link);
+}
+[data-theme="dark"] main pre {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+[data-theme="dark"] .tag-pill {
+  background-color: var(--color-surface);
+  color: var(--palette-dark-tag);
+}
+[data-theme="dark"] .tag-pill:hover {
+  background-color: var(--palette-dark-tag-hover-bg);
+  color: var(--palette-dark-invert);
+}
+[data-theme="dark"] .post-list-thumb-link {
+  background-color: var(--color-surface);
+}
+[data-theme="dark"] .theme-toggle {
+  border-color: var(--color-nav-text);
+}

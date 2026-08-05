@@ -10,24 +10,41 @@
     <li class="post-list-item">
       <article>
         <a href="{{ .RelPermalink }}" class="post-list-thumb-link">
-          {{ $thumbSrc := "" }}
+          {{/* Reset per post; use Scratch so nested range/with assignments
+                reliably propagate (variable `:=` reassignment across scopes is
+                unreliable in this Hugo version). */}}
+          {{ $.Scratch.Set "thumb" "" }}
+
+          {{/* 1) Explicit cover image from front matter (match by basename,
+                because Resource.Name carries the "images/" bundle prefix). */}}
           {{ with .Params.coverImage }}
-            {{ $ci := . }}
-            {{ $match := "" }}
+            {{ $ci := path.Base . }}
             {{ range $.Resources.ByType "image" }}
-              {{ $base := replace .Name "." "" }}
-              {{ if or (eq .Name $ci) (eq $base $ci) (eq .Name (printf "%s.jpg" $ci)) (eq .Name (printf "%s.png" $ci)) }}
-                {{ if not $match }}{{ $match = .RelPermalink }}{{ end }}
+              {{ if eq (path.Base .Name) $ci }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
+            {{ end }}
+          {{ end }}
+
+          {{/* 2) Otherwise the FIRST image linked in the post body, in
+                document order (markdown ![]() or HTML <img>). */}}
+          {{ if not ($.Scratch.Get "thumb") }}
+            {{ $body := .RawContent | default .Content }}
+            {{ $matches := findRESubmatch `(?i)(?:!\[[^\]]*\]\(([^)\s]+\.(?:png|jpe?g|gif|webp))\)|<img[^>]+src=["']([^"']+\.(?:png|jpe?g|gif|webp))["'])` $body }}
+            {{ range $matches }}
+              {{ $href := index . 1 }}{{ if eq $href "" }}{{ $href = index . 2 }}{{ end }}
+              {{ $base := path.Base $href }}
+              {{ range $.Resources.ByType "image" }}
+                {{ if eq (path.Base .Name) $base }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
               {{ end }}
-            {{ end }}
-            {{ if $match }}{{ $thumbSrc = $match }}{{ end }}
-          {{ end }}
-          {{ if not $thumbSrc }}
-            {{ range .Resources.ByType "image" }}
-              {{ if not $thumbSrc }}{{ $thumbSrc = .RelPermalink }}{{ end }}
+              {{ if ($.Scratch.Get "thumb") }}{{ break }}{{ end }}
             {{ end }}
           {{ end }}
-          {{ with $thumbSrc }}
+
+          {{/* 3) Last resort: any image in the bundle. */}}
+          {{ if not ($.Scratch.Get "thumb") }}
+            {{ range .Resources.ByType "image" }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
+          {{ end }}
+
+          {{ with ($.Scratch.Get "thumb") }}
           <img class="post-list-thumb" src="{{ . }}" alt="{{ $.Title }}">
           {{ end }}
         </a>
