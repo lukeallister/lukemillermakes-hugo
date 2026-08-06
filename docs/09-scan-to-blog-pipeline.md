@@ -510,3 +510,33 @@ A healthy manual run ends with
 
 Once a draft exists, publishing it is a separate path — see
 `10-cicd-deploy-runbook.md`.
+
+---
+
+## Volume is now a git worktree (added 2026-08-05)
+
+The `blog-content` podman volume (`/home/hermes/.local/share/containers/storage/volumes/blog-content/_data`) is now a git repository tracking `luke/lukemillermakes-hugo` on Gitea (`http://192.168.0.3:3000/luke/lukemillermakes-hugo.git`, plain HTTP; Gitea SSH :2222 is bound to 127.0.0.1 on alma9 so pushes go over HTTP with a token in `~/.git-credentials`).
+
+### Branch model
+- **`master`** — the published site source of truth. Only touched when you publish (merge `drafts` → `master`, push). Gitea Actions `deploy.yml` fires on `master` push and rsyncs into the volume (see `10-cicd-deploy-runbook.md`).
+- **`drafts`** — auto-committed by the scan pipeline. Every successful scan writes its new page bundle here as `draft: true`. You edit, flip `draft: false`, and merge to `master` when ready to publish. `master` is never touched by the scanner.
+
+### How a scan gets committed
+1. `blog-scan` runs `rsync_and_process.sh` → `scan_to_post.py`. `scan_to_post.py` records each successful PDF in `/var/lib/scan/.processed.json` with `detail` = the absolute bundle path (`/site/content/post/YYYY-MM-DD-slug`).
+2. `rsync_and_process.sh` then extracts every `ok:true` bundle path from that state file and appends it (repo-relative) to `/site/.scan-commit-queue`.
+3. A **host-side** systemd user timer (`scan-commit-drain.timer`, every 5 min, reboot-safe) runs `~/.local/bin/scan-commit-drain.sh`, which drains the queue by calling `scripts/commit-draft.sh <bundle>` for each entry. `commit-draft.sh` stages only that bundle, commits on the `drafts` branch, and pushes `drafts` to Gitea.
+
+Why host-side and not in-container: git is not installed in the `blog-scan` image; only the host (microosvm) has git 2.55.0. The shared volume makes the queue file visible to both.
+
+### Key files
+- `scripts/commit-draft.sh` — commits a single post bundle to `drafts` and pushes. Requires a bundle path arg; deliberately does NOT `git add -A` (the site has the `themes/xmin` submodule + `public/` build artifacts that must stay out of commits).
+- `scripts/ocr-pipeline/rsync_and_process.sh` — queues successful bundles.
+- `~/.local/bin/scan-commit-drain.sh` — host drain job.
+- `~/.config/systemd/user/scan-commit-drain.{service,timer}` — 5-min timer.
+- `.scan-commit-queue` — work queue (gitignored).
+
+### Setup notes / gotchas
+- Git was installed on MicroOS via `transactional-update` into snapshot 1244 (active default); survives reboot. `blog.pod` is enabled so the site self-heals.
+- The credential in `~/.git-credentials` must be `http://luke:<token>@host/...` — putting the token in the username field (no password) makes git fail with "could not read Username" under non-interactive use.
+- Initial seed: `git fetch origin master`, `git reset --mixed origin/master` (no backfill; the working tree already matched master), `git submodule update --init --recursive` (registers `themes/xmin`), `git checkout -b drafts`, `git push -u origin drafts`.
+- To force a commit of an already-scanned draft without re-scanning: append its repo-relative path to `.scan-commit-queue` and let the next drain tick run (or run `~/.local/bin/scan-commit-drain.sh` manually).
