@@ -522,14 +522,15 @@ The `blog-content` podman volume (`/home/hermes/.local/share/containers/storage/
 - **`drafts`** — auto-committed by the scan pipeline. Every successful scan writes its new page bundle here as `draft: true`. You edit, flip `draft: false`, and merge to `master` when ready to publish. `master` is never touched by the scanner.
 
 ### How a scan gets committed
-1. `blog-scan` runs `rsync_and_process.sh` → `scan_to_post.py`. `scan_to_post.py` records each successful PDF in `/var/lib/scan/.processed.json` with `detail` = the absolute bundle path (`/site/content/post/YYYY-MM-DD-slug`).
-2. `rsync_and_process.sh` then extracts every `ok:true` bundle path from that state file and appends it (repo-relative) to `/site/.scan-commit-queue`.
-3. A **host-side** systemd user timer (`scan-commit-drain.timer`, every 5 min, reboot-safe) runs `~/.local/bin/scan-commit-drain.sh`, which drains the queue by calling `scripts/commit-draft.sh <bundle>` for each entry. `commit-draft.sh` stages only that bundle, commits on the `drafts` branch, and pushes `drafts` to Gitea.
+1. `blog-scan` runs `rsync_and_process.sh` → `scan_to_post.py`. `scan_to_post.py` writes the new page bundle under `/site/content/post/YYYY-MM-DD-slug/`.
+2. `rsync_and_process.sh` then finds the most-recently-created bundle dir (newest `content/post/*/` modified in the last 15 min) and appends its repo-relative path to `/site/.scan-commit-queue` (de-duplicated).
+3. A **host-side** systemd user timer (`scan-commit-drain.timer`, every 5 min, reboot-safe) runs `~/.local/bin/scan-commit-drain.sh`, which drains the queue by calling `scripts/commit-draft.sh <bundle>` for each entry.
+4. `commit-draft.sh` **fetches the latest `drafts` from Gitea and rebases the working branch on top of it first**, then stages only that bundle, commits on `drafts`, and pushes `drafts` to Gitea. The pull-then-rebase step is what prevents "fetch first" push rejections when `drafts` has advanced (e.g. you published from your workstation) while a scan was in flight.
 
 Why host-side and not in-container: git is not installed in the `blog-scan` image; only the host (microosvm) has git 2.55.0. The shared volume makes the queue file visible to both.
 
 ### Key files
-- `scripts/commit-draft.sh` — commits a single post bundle to `drafts` and pushes. Requires a bundle path arg; deliberately does NOT `git add -A` (the site has the `themes/xmin` submodule + `public/` build artifacts that must stay out of commits).
+- `scripts/commit-draft.sh` — commits a single post bundle to `drafts` and pushes. **Fetches + rebases onto the latest remote `drafts` before committing** so a push is never rejected for being behind. Requires a bundle path arg; deliberately does NOT `git add -A` (the site has the `themes/xmin` submodule + `public/` build artifacts that must stay out of commits). On a rebase conflict it aborts cleanly and exits non-zero rather than leaving the repo mid-rebase.
 - `scripts/ocr-pipeline/rsync_and_process.sh` — queues successful bundles.
 - `~/.local/bin/scan-commit-drain.sh` — host drain job.
 - `~/.config/systemd/user/scan-commit-drain.{service,timer}` — 5-min timer.
