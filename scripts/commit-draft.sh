@@ -11,6 +11,11 @@
 # `git add -A`, because the site contains a git submodule (themes/xmin) and
 # build artifacts (public/) that must never be re-added wholesale.
 #
+# PULL-THEN-REBASE: before committing, this script fetches the latest remote
+# `drafts` and rebases the working branch on top of it. This prevents the
+# "fetch first" push rejection that happens when the remote `drafts` advances
+# (e.g. Luke publishes from his workstation) while a scan is in flight.
+#
 # Usage: commit-draft.sh POST_BUNDLE_DIR
 #   POST_BUNDLE_DIR  path (relative to repo root) of the new post bundle to
 #                    commit, e.g. content/post/2026-08-05-synth-case
@@ -46,6 +51,29 @@ if [ "$CURRENT" != "$BRANCH" ]; then
     git checkout -q "$BRANCH"
   else
     git checkout -q -b "$BRANCH"
+  fi
+fi
+
+# --- Pull first, then rebase our new draft on top of the latest remote ---
+# Prevents "fetch first" push rejections when Luke publishes from his
+# workstation (remote drafts advances) while a scan is in flight.
+if ! git fetch -q "$REMOTE" "$BRANCH" 2>&1; then
+  echo "commit-draft: WARNING: git fetch failed; proceeding with local state" >&2
+else
+  LOCAL=$(git rev-parse --verify "$BRANCH")
+  REMOTE_TIP=$(git rev-parse --verify "$REMOTE/$BRANCH" 2>/dev/null || echo "")
+  if [ -n "$REMOTE_TIP" ] && [ "$LOCAL" != "$REMOTE_TIP" ]; then
+    # Stash any stray uncommitted work so the rebase has a clean base.
+    git stash push -u -m "commit-draft-pre-rebase" >/dev/null 2>&1 || true
+    if git rebase "$REMOTE_TIP" 2>&1; then
+      echo "commit-draft: rebased $BRANCH onto $REMOTE/$BRANCH"
+    else
+      echo "commit-draft: rebase conflicted; aborting to avoid a stuck mid-rebase" >&2
+      git rebase --abort >/dev/null 2>&1 || true
+      git stash pop >/dev/null 2>&1 || true
+      exit 4
+    fi
+    git stash pop >/dev/null 2>&1 || true
   fi
 fi
 
