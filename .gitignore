@@ -2,6 +2,7 @@
 public/
 public_v2/
 public_v3/
+serve/
 
 # Hugo caches.
 resources/_gen/

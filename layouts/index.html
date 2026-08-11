@@ -7,6 +7,7 @@
 
   <ul class="post-list">
     {{ range first 20 (where .Site.RegularPages "Section" "post").ByDate.Reverse }}
+    {{ $post := . }}
     <li class="post-list-item">
       <article>
         <a href="{{ .RelPermalink }}" class="post-list-thumb-link">
@@ -17,12 +18,12 @@
 
           {{/* 1) Explicit cover image from front matter (match by basename,
                 because Resource.Name carries the "images/" bundle prefix). */}}
-          {{ with .Params.coverImage }}
-            {{ $ci := path.Base . }}
-            {{ range $.Resources.ByType "image" }}
-              {{ if eq (path.Base .Name) $ci }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
+            {{ with .Params.coverImage }}
+              {{ $ci := path.Base . }}
+              {{ range $post.Resources.ByType "image" }}
+                {{ if eq (path.Base .Name) $ci }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
+              {{ end }}
             {{ end }}
-          {{ end }}
 
           {{/* 2) Otherwise the FIRST image linked in the post body, in
                 document order (markdown ![]() or HTML <img>). */}}
@@ -32,7 +33,7 @@
             {{ range $matches }}
               {{ $href := index . 1 }}{{ if eq $href "" }}{{ $href = index . 2 }}{{ end }}
               {{ $base := path.Base $href }}
-              {{ range $.Resources.ByType "image" }}
+              {{ range $post.Resources.ByType "image" }}
                 {{ if eq (path.Base .Name) $base }}{{ $.Scratch.Set "thumb" .RelPermalink }}{{ end }}
               {{ end }}
               {{ if ($.Scratch.Get "thumb") }}{{ break }}{{ end }}

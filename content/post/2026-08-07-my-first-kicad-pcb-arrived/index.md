@@ -1,14 +1,26 @@
 ---
 title: "My First Kicad Pcb Arrived"
 date: 2026-08-07T12:00:00.000Z
-draft: true
-categories: ["typosphere"]
-tags: ["scan"]
+draft: false
+categories: ["electronics","guitar pedal"]
+tags: ["scan","kicad", "pcb",]
 ---
+
+![complete](images/grizzly.jpg)
 
 ![Page 1](images/page-01.jpg)
 
 ![Page 2](images/page-02.jpg)
+
+![spaghetti](images/spaghetti.jpg)
+
+![spaghetti-in-enclosure](images/spaghetti-in-enclosure.jpg)
+
+![footswitch](images/footswitch.jpg)
+
+<a href="images/its-an-overdrive.pdf" target="_blank">
+  <embed src="images/its-an-overdrive.pdf" type="application/pdf" width="100%" height="600px">
+</a>
 
 <details>
 <summary>OCR text transcript</summary>
